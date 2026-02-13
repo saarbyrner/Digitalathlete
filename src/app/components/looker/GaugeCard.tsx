@@ -1,5 +1,6 @@
 import { Paper, Typography, Box } from "@mui/material";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { getChartColorValues } from "./chartConfig";
 
 interface GaugeCardProps {
   value: number;
@@ -8,7 +9,9 @@ interface GaugeCardProps {
   color?: string;
 }
 
-export function GaugeCard({ value, max = 100, label, color = "#4285F4" }: GaugeCardProps) {
+export function GaugeCard({ value, max = 100, label, color }: GaugeCardProps) {
+  const colors = getChartColorValues();
+  const gaugeColor = color || colors.gaugePrimary;
   const percentage = (value / max) * 100;
   const data = [
     { name: "value", value: percentage },
@@ -44,8 +47,8 @@ export function GaugeCard({ value, max = 100, label, color = "#4285F4" }: GaugeC
               paddingAngle={0}
               dataKey="value"
             >
-              <Cell fill={color} />
-              <Cell fill="#E8EAED" />
+              <Cell fill={gaugeColor} />
+              <Cell fill={colors.gaugeBackground} />
             </Pie>
           </PieChart>
         </ResponsiveContainer>

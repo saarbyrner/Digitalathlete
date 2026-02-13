@@ -1,6 +1,7 @@
 import { Paper, Typography, Box } from "@mui/material";
 import {
-  LineChart,
+  ComposedChart,
+  Bar,
   Line,
   XAxis,
   YAxis,
@@ -20,24 +21,34 @@ import {
   lineConfig,
 } from "./chartConfig";
 
-interface LineChartCardProps {
+interface ComposedBarLineChartCardProps {
   title?: string;
   data: Array<{ [key: string]: string | number }>;
-  dataKeys: string[];
+  barDataKeys: string[];
+  lineDataKeys: string[];
   xAxisKey: string;
   colors?: string[];
+  lineColors?: string[];
   height?: number;
+  yAxisLabel?: string;
+  rightYAxisLabel?: string;
 }
 
-export function LineChartCard({
+export function ComposedBarLineChartCard({
   title,
   data,
-  dataKeys,
+  barDataKeys,
+  lineDataKeys,
   xAxisKey,
   colors,
+  lineColors,
   height = 300,
-}: LineChartCardProps) {
-  const chartColors = colors || getChartColors(dataKeys.length);
+  yAxisLabel,
+  rightYAxisLabel,
+}: ComposedBarLineChartCardProps) {
+  const chartColors = colors || getChartColors(barDataKeys.length);
+  const lineChartColors = lineColors || getChartColors(lineDataKeys.length || 1);
+
   return (
     <Paper
       sx={{
@@ -66,21 +77,42 @@ export function LineChartCard({
       )}
       <Box sx={{ width: "100%", height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }}>
         <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
-          <LineChart data={data} margin={defaultMargin}>
+          <ComposedChart data={data} margin={defaultMargin}>
             <CartesianGrid {...cartesianGridConfig} />
             <XAxis dataKey={xAxisKey} {...xAxisConfig} />
-            <YAxis {...yAxisConfig} />
+            <YAxis 
+              yAxisId="left"
+              {...yAxisConfig}
+              label={yAxisLabel ? { value: yAxisLabel, angle: -90, position: 'center', style: { textAnchor: 'middle' } } : undefined}
+            />
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              {...yAxisConfig}
+              label={rightYAxisLabel ? { value: rightYAxisLabel, angle: 90, position: 'center', style: { textAnchor: 'middle' } } : undefined}
+            />
             <Tooltip {...tooltipConfig} />
             <Legend {...legendConfig} />
-            {dataKeys.map((key, index) => (
+            {barDataKeys.map((key, index) => (
+              <Bar
+                key={key}
+                dataKey={key}
+                stackId="stack"
+                fill={chartColors[index % chartColors.length]}
+                yAxisId="left"
+              />
+            ))}
+            {lineDataKeys.map((key, index) => (
               <Line
                 key={key}
                 dataKey={key}
-                stroke={chartColors[index % chartColors.length]}
+                stroke={lineChartColors[index % lineChartColors.length]}
+                yAxisId="right"
                 {...lineConfig}
+                strokeWidth={2}
               />
             ))}
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </Box>
     </Paper>

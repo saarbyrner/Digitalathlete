@@ -29,6 +29,14 @@ export interface InjuryRecord {
   position: string;
   positionGroup: string;
   injuryType: InjuryType;
+  // New fields for Looker-style filtering
+  gameweek: string;
+  weekTypeName: string;
+  game: string;
+  mechanismOfInjury: string;
+  contactTypeCategory: string;
+  seasonType: string;
+  teamActivity: string;
   injuryDate: Date;
   returnDate: Date | null;
   expectedReturnDate: Date | null;
@@ -41,6 +49,14 @@ export interface InjuryRecord {
   description: string;
   isRecurring: boolean;
   previousInjuryId?: string;
+  rosterPosition?: string;
+  missedTimeInjury?: boolean;
+  missedGameInjury?: boolean;
+  missedPracticeInjury?: boolean;
+  bodyPart?: string;
+  positionAtTimeOfInjury?: string;
+  participationReason?: string;
+  isPastPlayer?: boolean;
 }
 
 // Helper to generate random dates within a season
@@ -124,6 +140,12 @@ function generateInjuryRecords(): InjuryRecord[] {
   const playersPerTeamPerSeason = 28;
   const injuryRatePerPlayer = 0.35; // 35% chance a player has an injury in a season
 
+  // Auxiliary mock pools for new fields (use normalized tokens for consistent filtering)
+  const mechanisms = ["contact", "non-contact", "overuse", "unknown"];
+  const contactTypes = ["player-contact", "ground-contact", "equipment-contact", "no-contact"];
+  const seasonTypes = ["Regular", "Pre-season", "Post-season", "Off-season"];
+  const bodyParts = ["Head","Neck","Shoulder","Arm","Elbow","Wrist","Hand","Back","Hip","Groin","Quad","Hamstring","Knee","Ankle","Foot"];
+  const participationReasons = ["In-game contact","Training incident","Non-contact strain","Overuse","Illness","Other"];
   seasons.forEach(season => {
     NFL_TEAMS.forEach(team => {
       const numInjuries = Math.floor(playersPerTeamPerSeason * injuryRatePerPlayer) + Math.floor(Math.random() * 5);
@@ -197,7 +219,23 @@ function generateInjuryRecords(): InjuryRecord[] {
         }
         
         const isRecurring = Math.random() < 0.15; // 15% are recurring injuries
-        
+        // Derive additional fields
+        const weekTypeName = week >= 18 ? "Playoffs" : "Regular Season";
+        const gameweek = `${season} Week ${week}`;
+        const opponent = NFL_TEAMS.filter(t => t.id !== team.id)[Math.floor(Math.random() * (NFL_TEAMS.length - 1))];
+        const gameName = `Week ${week} vs ${opponent.abbreviation}`;
+        const mechanismOfInjury = getRandomItem(mechanisms);
+        const contactTypeCategory = mechanismOfInjury === "contact" ? getRandomItem(contactTypes) : "no-contact";
+        const seasonType = getRandomItem(seasonTypes);
+        const teamActivity = sessionTypeAtInjury === "Games" ? "Game" : sessionTypeAtInjury === "Practice" ? "Practice" : (sessionTypeAtInjury === "Conditioning" ? "Conditioning" : "Training");
+        const missedTimeInjury = daysOut > 3;
+        const missedGameInjury = sessionTypeAtInjury === "Games" && daysOut > 0;
+        const missedPracticeInjury = sessionTypeAtInjury === "Practice" && daysOut > 0;
+        const bodyPart = getRandomItem(bodyParts);
+        const positionAtTimeOfInjury = getRandomItem(POSITIONS);
+        const participationReason = getRandomItem(participationReasons);
+        const isPastPlayer = Math.random() < 0.12; // ~12% are past players
+
         records.push({
           id: `INJ-${recordId++}`,
           playerId,
@@ -207,7 +245,15 @@ function generateInjuryRecords(): InjuryRecord[] {
           teamAbbr: team.abbreviation,
           position,
           positionGroup,
+          rosterPosition: position,
           injuryType,
+          gameweek,
+          weekTypeName,
+          game: gameName,
+          mechanismOfInjury,
+          contactTypeCategory,
+          seasonType,
+          teamActivity,
           injuryDate,
           returnDate,
           expectedReturnDate,
@@ -219,6 +265,13 @@ function generateInjuryRecords(): InjuryRecord[] {
           week,
           description: `${severity} ${injuryType} injury`,
           isRecurring,
+          missedTimeInjury,
+          missedGameInjury,
+          missedPracticeInjury,
+          bodyPart,
+          positionAtTimeOfInjury,
+          participationReason,
+          isPastPlayer,
         });
       }
     });

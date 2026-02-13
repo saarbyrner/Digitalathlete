@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Box,
   List,
@@ -67,14 +68,20 @@ export function FoldersSidebar({
     onFolderSelect?.(folder.id);
   };
 
+  const navigate = useNavigate();
+
   const handleBackClick = () => {
     setSelectedFolder(null);
   };
 
   const handleDashboardClick = (dashboardId: string) => {
-    if (selectedFolder && onDashboardSelect) {
+    if (!selectedFolder) return;
+    if (onDashboardSelect) {
       onDashboardSelect(dashboardId, selectedFolder.id);
+      return;
     }
+    // Fallback: navigate directly to the dashboard route when no callback provided
+    navigate(`/dashboards/${dashboardId}`);
   };
 
   return (
@@ -363,22 +370,29 @@ export const defaultFoldersData: Folder[] = [
   },
   {
     id: "my-folder",
-    name: "My Folder",
+    name: "My folder",
     icon: <FolderOutlined />,
     dashboards: [
-      { id: "4", name: "Weekly Report" },
-      { id: "5", name: "Monthly Summary" },
-      { id: "6", name: "Athlete Progress" },
+      { id: "rehab", name: "Rehab" },
     ],
   },
   {
     id: "shared",
-    name: "Shared",
+    name: "Shared folder",
     icon: <PeopleOutlineOutlined />,
     dashboards: [
-      { id: "7", name: "Team Analytics" },
-      { id: "8", name: "Competition Data" },
-      { id: "9", name: "Season Overview" },
+      { id: "dashboard", name: "Dashboard" },
+      { id: "missed-time", name: "Missed Time" },
+      { id: "concussion", name: "Concussion" },
+      { id: "shoulder", name: "Shoulder" },
+      { id: "lex-sprain", name: "LEX Sprain" },
+      { id: "lex-strain", name: "LEX Strain" },
+      { id: "acl", name: "ACL" },
+      { id: "hamstring", name: "Hamstring" },
+      { id: "other-injuries", name: "Other Injuries" },
+      { id: "recovery-time", name: "Recovery Time" },
+      { id: "team-view", name: "Team View" },
     ],
   },
+  
 ];

@@ -9,6 +9,16 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import {
+  getChartColors,
+  cartesianGridConfig,
+  xAxisConfig,
+  yAxisConfig,
+  tooltipConfig,
+  legendConfig,
+  defaultMargin,
+  barRadius,
+} from "./chartConfig";
 
 interface GroupedBarChartCardProps {
   title?: string;
@@ -24,9 +34,10 @@ export function GroupedBarChartCard({
   data,
   dataKeys,
   xAxisKey,
-  colors = ["#4285F4", "#8AB4F8", "#7B61FF"],
+  colors,
   height = 300,
 }: GroupedBarChartCardProps) {
+  const chartColors = colors || getChartColors(dataKeys.length);
   return (
     <Paper
       sx={{
@@ -55,39 +66,18 @@ export function GroupedBarChartCard({
       )}
       <Box sx={{ width: "100%", height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }}>
         <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
-          <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8EAED" vertical={false} />
-            <XAxis
-              dataKey={xAxisKey}
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={{ stroke: "#E8EAED" }}
-            />
-            <YAxis
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                fontFamily: "var(--font-family-base)",
-                backgroundColor: "var(--white)",
-                border: "var(--border-width-thin) solid var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Legend
-              wrapperStyle={{
-                fontFamily: "var(--font-family-base)",
-                fontSize: 12,
-              }}
-            />
+          <BarChart data={data} margin={defaultMargin}>
+            <CartesianGrid {...cartesianGridConfig} />
+            <XAxis dataKey={xAxisKey} {...xAxisConfig} />
+            <YAxis {...yAxisConfig} />
+            <Tooltip {...tooltipConfig} />
+            <Legend {...legendConfig} />
             {dataKeys.map((key, index) => (
               <Bar
                 key={key}
                 dataKey={key}
-                fill={colors[index % colors.length]}
-                radius={[4, 4, 0, 0]}
+                fill={chartColors[index % chartColors.length]}
+                radius={barRadius}
               />
             ))}
           </BarChart>

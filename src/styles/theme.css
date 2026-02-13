@@ -35,12 +35,47 @@
   --sidebar-border: var(--border-default);
   --sidebar-ring: var(--input-focus-ring);
   
-  /* Chart colors */
-  --chart-1: #B800D8;
-  --chart-2: #2196F3;
-  --chart-3: #26A69A;
-  --chart-4: #7B1FA2;
-  --chart-5: #009688;
+  /* Chart colors - Looker's professional palette (categorical) - From actual Looker screenshots */
+  --chart-1: #5B9BD5;  /* Looker light blue (primary bars) */
+  --chart-2: #CC5BC4;  /* Lavender/purple (lines) */
+  --chart-3: #ED7D31;  /* Looker orange */
+  --chart-4: #70AD47;  /* Looker green */  
+  --chart-5: #FFC000;  /* Looker yellow/gold */
+  --chart-6: #A5A5A5;  /* Medium gray */
+  --chart-7: #4472C4;  /* Looker deep blue */
+  --chart-8: #264478;  /* Dark navy */
+  
+  /* Blue spectrum (for single-series charts, gradients) */
+  --chart-blue-light: #9DC3E6;   /* Very light blue (bars in tables) */
+  --chart-blue-medium: #5B9BD5;  /* Looker standard blue */
+  --chart-blue-dark: #2F5597;    /* Dark blue */
+  
+  /* Chart infrastructure */
+  --chart-grid: #EEEEEE;         /* Very subtle grid (barely visible) */
+  --chart-axis-text: #666666;    /* Axis labels */
+  --chart-axis-line: #DDDDDD;    /* Axis lines */
+  --chart-background: #FFFFFF;   /* Pure white */
+  
+  /* Tooltips */
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-border: #CCCCCC;
+  --chart-tooltip-shadow: rgba(0, 0, 0, 0.1);
+  
+  /* Metric cards */
+  --chart-metric-number: #202124;   /* Large number color */
+  --chart-metric-label: #5F6368;    /* Label text */
+  --chart-metric-trend-up: #0F9D58; /* Green arrow up */
+  --chart-metric-trend-down: #DB4437; /* Red arrow down */
+  
+  /* Gauge specific */
+  --chart-gauge-primary: #4A90E2;   /* Gauge fill color */
+  --chart-gauge-background: #E8E8E8; /* Gauge background track */
+  
+  /* Table bars (inline visualizations) */
+  --chart-table-bar-1: #7CB5EC;  /* Light blue */
+  --chart-table-bar-2: #B88FD9;  /* Light purple */
+  --chart-table-bar-3: #F4A582;  /* Light coral */
+  --chart-table-bar-4: #90CAF9;  /* Sky blue */
   
   /* Elevation */
   --elevation-sm: var(--shadow-sm);
@@ -72,6 +107,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-blue-light: var(--chart-blue-light);
+  --color-chart-blue-medium: var(--chart-blue-medium);
+  --color-chart-blue-dark: var(--chart-blue-dark);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-axis-text: var(--chart-axis-text);
+  --color-chart-axis-line: var(--chart-axis-line);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);

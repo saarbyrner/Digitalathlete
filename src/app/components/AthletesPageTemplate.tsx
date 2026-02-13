@@ -1,4 +1,5 @@
 import { Box, Chip } from "@/app/components/playbook";
+import { useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -135,6 +136,7 @@ const getStatusColor = (
 };
 
 export function AthletesPageTemplate() {
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -209,7 +211,7 @@ export function AthletesPageTemplate() {
       }}
     >
       {/* Main Navigation */}
-      <MainNavigation />
+      <MainNavigation isExpanded={isNavExpanded} onToggle={setIsNavExpanded} />
 
       {/* Main Content */}
       <Box
@@ -218,6 +220,8 @@ export function AthletesPageTemplate() {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          marginLeft: isNavExpanded ? "240px" : "72px",
+          transition: "margin-left 0.3s ease",
         }}
       >
         {/* AppBar Header */}
@@ -240,9 +244,9 @@ export function AthletesPageTemplate() {
         {/* Page Content */}
         <Box
           sx={{
-            p: "var(--spacing-4)",
-            flexGrow: 1,
-            backgroundColor: "#fafafa",
+              p: "var(--spacing-4)",
+              flexGrow: 1,
+              backgroundColor: "var(--background)",
           }}
         >
           {/* DataGrid Card */}
@@ -271,7 +275,7 @@ export function AthletesPageTemplate() {
                 border: "none",
                 fontFamily: "var(--font-family-base)",
                 "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: "#fafafa",
+                  backgroundColor: "var(--background)",
                   borderBottom:
                     "var(--border-width-thin) solid var(--border-default)",
                   fontFamily: "var(--font-family-base)",

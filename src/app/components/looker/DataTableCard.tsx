@@ -1,4 +1,5 @@
 import { Paper, Typography, Box } from "@mui/material";
+import { getChartColorValues } from "./chartConfig";
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ interface DataTableCardProps {
 }
 
 export function DataTableCard({ title, columns, rows }: DataTableCardProps) {
+  const colors = getChartColorValues();
   const getMaxValue = (columnId: string) => {
     return Math.max(...rows.map((row) => Number(row[columnId]) || 0));
   };
@@ -47,7 +49,7 @@ export function DataTableCard({ title, columns, rows }: DataTableCardProps) {
           <TableHead>
             <TableRow
               sx={{
-                backgroundColor: "#FAFAFA",
+                backgroundColor: "var(--grey-50)",
               }}
             >
               {columns.map((column) => (
@@ -98,7 +100,7 @@ export function DataTableCard({ title, columns, rows }: DataTableCardProps) {
                         <Box
                           sx={{
                             height: 8,
-                            backgroundColor: "#4285F4",
+                            backgroundColor: colors.tableBar1,
                             borderRadius: "var(--radius-sm)",
                             width: `${(Number(row[column.id]) / getMaxValue(column.id)) * 100}%`,
                             minWidth: 4,

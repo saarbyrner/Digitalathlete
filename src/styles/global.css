@@ -170,7 +170,7 @@
   --text-on-dark: var(--white);
   
   /* Backgrounds */
-  --background-default: var(--white);
+  --background-default: var(--grey-50);
   --background-paper: var(--white);
   --background-elevated: var(--white);
   --background-overlay: rgba(0, 0, 0, 0.5);
@@ -266,4 +266,37 @@
   --button-padding-x-sm: 12px;
   --button-padding-x-md: 16px;
   --button-padding-x-lg: 24px;
+  
+  /* ===== LOOKER FILTER SPECIFIC ===== */
+  /* Variables for Looker-style dashboard filters */
+  --looker-filter-bg: var(--white);
+  --looker-filter-border: var(--border-color-default);
+  --looker-filter-border-hover: var(--grey-200);
+  --looker-filter-border-focus: var(--blue-accent);
+  --looker-filter-radius: var(--radius-full);
+  --looker-filter-label-color: var(--grey-100);
+  --looker-filter-text-color: var(--grey-200);
+  --looker-filter-placeholder: var(--grey-100-50);
+  --looker-filter-height: 36px;
+  --looker-toggle-active-bg: var(--grey-200);
+  --looker-toggle-active-text: var(--white);
+  --looker-toggle-inactive-bg: var(--white);
+  --looker-toggle-inactive-text: var(--grey-200);
+}
+
+/* Responsive behavior for Looker filter row
+   - Default: single-line with horizontal scroll
+   - On narrow viewports: allow wrapping to multiple rows
+*/
+.looker-filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  /* Allow wrapping whenever items exceed container width */
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.looker-filter-row > * {
+  flex: 0 1 auto;
 }

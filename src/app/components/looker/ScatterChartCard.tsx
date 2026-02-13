@@ -9,6 +9,15 @@ import {
   ResponsiveContainer,
   ZAxis,
 } from "recharts";
+import {
+  cartesianGridConfig,
+  xAxisConfig,
+  yAxisConfig,
+  tooltipConfig,
+  defaultMargin,
+  scatterConfig,
+  getChartColorValues,
+} from "./chartConfig";
 
 interface ScatterChartCardProps {
   title?: string;
@@ -26,9 +35,11 @@ export function ScatterChartCard({
   xKey,
   yKey,
   zKey,
-  color = "#4285F4",
+  color,
   height = 300,
 }: ScatterChartCardProps) {
+  const colors = getChartColorValues();
+  const scatterColor = color || colors.blueLight;
   return (
     <Paper
       sx={{
@@ -54,33 +65,13 @@ export function ScatterChartCard({
       )}
       <Box sx={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8EAED" />
-            <XAxis
-              type="number"
-              dataKey={xKey}
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={{ stroke: "#E8EAED" }}
-            />
-            <YAxis
-              type="number"
-              dataKey={yKey}
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={false}
-              tickLine={false}
-            />
+          <ScatterChart margin={defaultMargin}>
+            <CartesianGrid {...cartesianGridConfig} />
+            <XAxis type="number" dataKey={xKey} {...xAxisConfig} />
+            <YAxis type="number" dataKey={yKey} {...yAxisConfig} />
             {zKey && <ZAxis type="number" dataKey={zKey} range={[50, 400]} />}
-            <Tooltip
-              cursor={{ strokeDasharray: "3 3" }}
-              contentStyle={{
-                fontFamily: "var(--font-family-base)",
-                backgroundColor: "var(--white)",
-                border: "var(--border-width-thin) solid var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Scatter data={data} fill={color} fillOpacity={0.6} />
+            <Tooltip cursor={{ strokeDasharray: "3 3" }} {...tooltipConfig} />
+            <Scatter data={data} fill={scatterColor} {...scatterConfig} />
           </ScatterChart>
         </ResponsiveContainer>
       </Box>

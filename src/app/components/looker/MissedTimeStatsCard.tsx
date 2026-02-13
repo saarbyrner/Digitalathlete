@@ -1,4 +1,5 @@
 import { Paper, Typography, Box } from "@mui/material";
+import { getChartColorValues } from "./chartConfig";
 
 interface MissedTimeStatsCardProps {
   season: number;
@@ -17,6 +18,7 @@ export function MissedTimeStatsCard({
   isTied,
   numberOfInjuries,
 }: MissedTimeStatsCardProps) {
+  const colors = getChartColorValues();
   // Calculate position of team marker on visualization (0-100 scale)
   const teamPosition = Math.min(100, (teamAvg / 30) * 100);
   const nflPosition = Math.min(100, (nflAvg / 30) * 100);
@@ -64,7 +66,7 @@ export function MissedTimeStatsCard({
             left: 0,
             right: 0,
             height: 1,
-            borderTop: "2px dotted #E8EAED",
+            borderTop: `2px dotted ${colors.grid}`,
             transform: "translateY(-50%)",
           }}
         />
@@ -86,8 +88,8 @@ export function MissedTimeStatsCard({
               width: 12,
               height: 12,
               borderRadius: "50%",
-              backgroundColor: "#FF6B35",
-              border: "2px solid #FF6B35",
+              backgroundColor: colors.chart3,
+              border: `2px solid ${colors.chart3}`,
               mb: 0.5,
             }}
           />
@@ -95,8 +97,7 @@ export function MissedTimeStatsCard({
 
         {/* Team Avg marker (Teal) */}
         <Box
-          sx={{
-            position: "absolute",
+          sx={{            position: "absolute",
             left: `${teamPosition}%`,
             top: "50%",
             transform: "translate(-50%, -50%)",
@@ -110,8 +111,8 @@ export function MissedTimeStatsCard({
               width: 12,
               height: 12,
               borderRadius: "50%",
-              backgroundColor: "#00C4B4",
-              border: "2px solid #00C4B4",
+              backgroundColor: colors.chart5,
+              border: `2px solid ${colors.chart5}`,
               mb: 0.5,
             }}
           />
@@ -132,7 +133,7 @@ export function MissedTimeStatsCard({
             sx={{
               fontFamily: "var(--font-family-base)",
               fontSize: 12,
-              color: "#5F6368",
+              color: colors.axisText,
               mb: 0.5,
             }}
           >
@@ -156,7 +157,7 @@ export function MissedTimeStatsCard({
             sx={{
               fontFamily: "var(--font-family-base)",
               fontSize: 12,
-              color: "#5F6368",
+              color: colors.axisText,
               mb: 0.5,
             }}
           >
@@ -180,7 +181,7 @@ export function MissedTimeStatsCard({
             sx={{
               fontFamily: "var(--font-family-base)",
               fontSize: 12,
-              color: "#5F6368",
+              color: colors.axisText,
               mb: 0.5,
             }}
           >
@@ -204,7 +205,7 @@ export function MissedTimeStatsCard({
             sx={{
               fontFamily: "var(--font-family-base)",
               fontSize: 12,
-              color: "#5F6368",
+              color: colors.axisText,
               mb: 0.5,
             }}
           >

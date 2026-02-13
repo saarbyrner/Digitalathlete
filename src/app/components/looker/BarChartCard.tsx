@@ -9,6 +9,15 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import {
+  cartesianGridConfig,
+  xAxisConfig,
+  yAxisConfig,
+  tooltipConfig,
+  defaultMargin,
+  barRadius,
+  getChartColorValues,
+} from "./chartConfig";
 
 interface BarChartCardProps {
   title?: string;
@@ -24,9 +33,11 @@ export function BarChartCard({
   data,
   dataKey,
   xAxisKey,
-  color = "#4285F4",
+  color,
   height = 300,
 }: BarChartCardProps) {
+  const colors = getChartColorValues();
+  const barColor = color || colors.blueLight;
   return (
     <Paper
       sx={{
@@ -55,28 +66,12 @@ export function BarChartCard({
       )}
       <Box sx={{ width: "100%", height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }}>
         <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
-          <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8EAED" vertical={false} />
-            <XAxis
-              dataKey={xAxisKey}
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={{ stroke: "#E8EAED" }}
-            />
-            <YAxis
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                fontFamily: "var(--font-family-base)",
-                backgroundColor: "var(--white)",
-                border: "var(--border-width-thin) solid var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} />
+          <BarChart data={data} margin={defaultMargin}>
+            <CartesianGrid {...cartesianGridConfig} />
+            <XAxis dataKey={xAxisKey} {...xAxisConfig} />
+            <YAxis {...yAxisConfig} />
+            <Tooltip {...tooltipConfig} />
+            <Bar dataKey={dataKey} fill={barColor} radius={barRadius} />
           </BarChart>
         </ResponsiveContainer>
       </Box>

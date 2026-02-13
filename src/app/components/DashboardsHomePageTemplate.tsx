@@ -20,6 +20,7 @@ import {
   CreateNewFolder as CreateNewFolderIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
+import { getChartColors } from "@/app/components/looker/chartConfig";
 
 interface Dashboard {
   id: number;
@@ -30,70 +31,25 @@ interface Dashboard {
 }
 
 const mockDashboards: Dashboard[] = [
-  {
-    id: 1,
-    folderName: "My folder",
-    date: "4 Feb 2026",
-    title: "Individual player report",
-    thumbnailColor: "#E3F2FD",
-  },
-  {
-    id: 2,
-    folderName: "My folder",
-    date: "3 Feb 2026",
-    title: "Team performance overview",
-    thumbnailColor: "#F3E5F5",
-  },
-  {
-    id: 3,
-    folderName: "My folder",
-    date: "2 Feb 2026",
-    title: "Training load analysis",
-    thumbnailColor: "#FFF3E0",
-  },
-  {
-    id: 4,
-    folderName: "My folder",
-    date: "1 Feb 2026",
-    title: "Injury tracking dashboard",
-    thumbnailColor: "#FFEBEE",
-  },
-  {
-    id: 5,
-    folderName: "My folder",
-    date: "31 Jan 2026",
-    title: "Match statistics breakdown",
-    thumbnailColor: "#E8F5E9",
-  },
-  {
-    id: 6,
-    folderName: "My folder",
-    date: "30 Jan 2026",
-    title: "Squad rotation metrics",
-    thumbnailColor: "#FFF9C4",
-  },
-  {
-    id: 7,
-    folderName: "My folder",
-    date: "29 Jan 2026",
-    title: "Physical benchmarks",
-    thumbnailColor: "#E0F2F1",
-  },
-  {
-    id: 8,
-    folderName: "My folder",
-    date: "28 Jan 2026",
-    title: "Tactical analysis report",
-    thumbnailColor: "#FCE4EC",
-  },
+  { id: 1, folderName: "My folder", date: "4 Feb 2026", title: "Individual player report" },
+  { id: 2, folderName: "My folder", date: "3 Feb 2026", title: "Team performance overview" },
+  { id: 3, folderName: "My folder", date: "2 Feb 2026", title: "Training load analysis" },
+  { id: 4, folderName: "My folder", date: "1 Feb 2026", title: "Injury tracking dashboard" },
+  { id: 5, folderName: "My folder", date: "31 Jan 2026", title: "Match statistics breakdown" },
+  { id: 6, folderName: "My folder", date: "30 Jan 2026", title: "Squad rotation metrics" },
+  { id: 7, folderName: "My folder", date: "29 Jan 2026", title: "Physical benchmarks" },
+  { id: 8, folderName: "My folder", date: "28 Jan 2026", title: "Tactical analysis report" },
 ];
 
 export function DashboardsHomePageTemplate() {
   const [selectedTab, setSelectedTab] = useState(1);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const themeChartColors = getChartColors();
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
@@ -113,7 +69,7 @@ export function DashboardsHomePageTemplate() {
       }}
     >
       {/* Main Navigation */}
-      <MainNavigation />
+      <MainNavigation isExpanded={isNavExpanded} onToggle={setIsNavExpanded} />
 
       {/* Main Content */}
       <Box
@@ -122,6 +78,8 @@ export function DashboardsHomePageTemplate() {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          marginLeft: isNavExpanded ? "240px" : "72px",
+          transition: "margin-left 0.3s ease",
         }}
       >
         {/* AppBar Header */}
@@ -137,11 +95,11 @@ export function DashboardsHomePageTemplate() {
         {/* Page Content */}
         <Box
           sx={{
-            flexGrow: 1,
-            backgroundColor: "#fafafa",
-            display: "flex",
-            flexDirection: "column",
-          }}
+              flexGrow: 1,
+              backgroundColor: "var(--background)",
+              display: "flex",
+              flexDirection: "column",
+            }}
         >
           {/* Search and Actions Bar */}
           <Box
@@ -307,13 +265,13 @@ export function DashboardsHomePageTemplate() {
             }}
           >
             <Grid container spacing={3}>
-              {mockDashboards.map((dashboard) => (
+              {mockDashboards.map((dashboard, idx) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={dashboard.id}>
                   <DashboardCard
                     folderName={dashboard.folderName}
                     date={dashboard.date}
                     title={dashboard.title}
-                    thumbnailColor={dashboard.thumbnailColor}
+                    thumbnailColor={dashboard.thumbnailColor ?? themeChartColors[idx % themeChartColors.length]}
                     onClick={() => console.log(`Clicked dashboard: ${dashboard.title}`)}
                     onMove={() => console.log(`Move: ${dashboard.title}`)}
                     onCopy={() => console.log(`Copy: ${dashboard.title}`)}

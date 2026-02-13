@@ -10,6 +10,13 @@ import {
   Legend,
   Cell,
 } from "recharts";
+import {
+  cartesianGridConfig,
+  xAxisConfig,
+  yAxisConfig,
+  tooltipConfig,
+  legendConfig,
+} from "./chartConfig";
 
 interface HorizontalBarData {
   category: string;
@@ -63,12 +70,11 @@ export function HorizontalBarChartCard({
             layout="vertical"
             margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8EAED" horizontal={false} />
+            <CartesianGrid {...cartesianGridConfig} horizontal={false} />
             <XAxis
               type="number"
               domain={[0, maxValue || "auto"]}
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={{ stroke: "#E8EAED" }}
+              {...xAxisConfig}
               label={{
                 value: "Missed Time Injuries",
                 position: "insideBottom",
@@ -76,33 +82,18 @@ export function HorizontalBarChartCard({
                 style: {
                   fontFamily: "var(--font-family-base)",
                   fontSize: 12,
-                  fill: "#5F6368",
+                  fill: "var(--chart-axis-text)",
                 },
               }}
             />
             <YAxis
               type="category"
               dataKey="category"
-              tick={{ fontFamily: "var(--font-family-base)", fontSize: 12, fill: "#5F6368" }}
-              axisLine={false}
-              tickLine={false}
+              {...yAxisConfig}
               width={110}
             />
-            <Tooltip
-              contentStyle={{
-                fontFamily: "var(--font-family-base)",
-                backgroundColor: "var(--white)",
-                border: "var(--border-width-thin) solid var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Legend
-              wrapperStyle={{
-                fontFamily: "var(--font-family-base)",
-                fontSize: 12,
-              }}
-            />
+            <Tooltip {...tooltipConfig} />
+            <Legend {...legendConfig} />
             <Bar dataKey="value" radius={[0, 4, 4, 0]}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />

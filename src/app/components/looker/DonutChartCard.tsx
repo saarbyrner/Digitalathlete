@@ -1,5 +1,6 @@
 import { Paper, Typography, Box } from "@mui/material";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { getChartColors, tooltipConfig, legendConfig } from "./chartConfig";
 
 interface DonutChartCardProps {
   title?: string;
@@ -9,6 +10,7 @@ interface DonutChartCardProps {
 }
 
 export function DonutChartCard({ title, data, colors, height = 300 }: DonutChartCardProps) {
+  const chartColors = colors || getChartColors(data.length);
   return (
     <Paper
       sx={{
@@ -48,24 +50,11 @@ export function DonutChartCard({ title, data, colors, height = 300 }: DonutChart
               dataKey="value"
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                fontFamily: "var(--font-family-base)",
-                backgroundColor: "var(--white)",
-                border: "var(--border-width-thin) solid var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Legend
-              wrapperStyle={{
-                fontFamily: "var(--font-family-base)",
-                fontSize: 12,
-              }}
-            />
+            <Tooltip {...tooltipConfig} />
+            <Legend {...legendConfig} />
           </PieChart>
         </ResponsiveContainer>
       </Box>

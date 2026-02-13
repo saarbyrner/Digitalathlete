@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40" viewBox="0 0 160 40" role="img" aria-label="Logo">
+  <rect width="160" height="40" fill="#0f172a" rx="4" />
+  <!-- If you place the attached image at the path `src/app/assets/nfl-logo.png`,
+       this SVG will render it on the left side of the nav. -->
+  <image href="nfl-logo.png" x="8" y="4" width="32" height="32" preserveAspectRatio="xMidYMid meet" />
+  <text x="52" y="26" fill="#ffffff" font-family="Inter, Arial, Helvetica, sans-serif" font-size="14">Digitalathlete</text>
+</svg>

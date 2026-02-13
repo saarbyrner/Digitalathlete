@@ -1,19 +1,8 @@
-import { useState } from "react";
-import {
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  ListItemText,
-  Chip,
-  Box,
-  LocalizationProvider,
-  DatePicker,
-} from "@/app/components/playbook";
-import { AdapterDateFns } from "@/app/components/playbook";
-import { SelectChangeEvent } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Select, MenuItem, FormControl, InputLabel, Chip, Box, Checkbox, ListItemText } from "@/app/components/playbook";
 import { NFL_TEAMS } from "@/app/data/nflTeams";
+import { SelectChangeEvent } from "@mui/material";
+import { useGlobalFilters } from "@/app/contexts/GlobalFiltersContext";
 
 interface DashboardFiltersProps {
   onFilterChange?: (filters: FilterState) => void;
@@ -34,83 +23,75 @@ export interface FilterState {
 const SEASONS = ["2024", "2023", "2022", "2021", "2020"];
 const BENCHMARK_OPTIONS = ["2-Year Average", "3-Year Average", "5-Year Average"];
 const QUICK_DATE_RANGES = [
+  "Off preseason - Preseason EX",
   "Preseason to Playoffs",
   "Week 1 to Week 8",
   "Week 9 to Week 17",
   "Playoffs Only",
 ];
 const SESSION_TYPES = [
-  "Games",
+  "All types",
+  "Game",
   "Practice",
+  "Pregame",
   "Conditioning",
-  "Recovery",
-  "Strength Training",
-  "Film Study",
+  "Other",
+  "Unknown",
+  "No data",
 ];
-const INJURY_STATUS_OPTIONS = ["Out", "Limited"];
+// const INJURY_STATUS_OPTIONS = ["Out", "Limited"]; (removed - not used)
 
 export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFiltersProps) {
+  const { globalFilters, setGlobalFilters } = useGlobalFilters();
+
   const [filters, setFilters] = useState<FilterState>({
-    season: "2024",
-    benchmarkValue: "",
+    season: globalFilters.season || "2024",
+    benchmarkValue: globalFilters.benchmarkValue || "",
     startDate: null,
     endDate: null,
-    quickDateRange: "",
-    sessionTypes: [],
+    quickDateRange: globalFilters.quickDateRange || "",
+    sessionTypes: globalFilters.sessionTypes || [],
     injuryStatus: "",
-    teamId: "", // Changed from null to ""
+    teamId: "",
   });
 
+  // sync when global filters change elsewhere
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, ...globalFilters } as FilterState));
+  }, [globalFilters]);
+
   const handleSeasonChange = (event: SelectChangeEvent<string>) => {
-    const newFilters = {
-      ...filters,
-      season: event.target.value,
-      benchmarkValue: "",
-    };
+    const value = event.target.value;
+    // Update global filter
+    setGlobalFilters({ season: value, benchmarkValue: "" });
+    const newFilters = { ...filters, season: value, benchmarkValue: "" };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 
   const handleBenchmarkChange = (event: SelectChangeEvent<string>) => {
-    const newFilters = {
-      ...filters,
-      benchmarkValue: event.target.value,
-      season: "",
-    };
+    const value = event.target.value;
+    setGlobalFilters({ benchmarkValue: value, season: "" });
+    const newFilters = { ...filters, benchmarkValue: value, season: "" };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 
-  const handleDateRangeChange = (newValue: Date | null) => {
-    const newFilters = { ...filters, startDate: newValue };
-    setFilters(newFilters);
-    onFilterChange?.(newFilters);
-  };
-
-  const handleEndDateChange = (newValue: Date | null) => {
-    const newFilters = { ...filters, endDate: newValue };
-    setFilters(newFilters);
-    onFilterChange?.(newFilters);
-  };
+  // (date pickers removed — weeks range replaces custom date inputs)
 
   const handleQuickDateRangeChange = (event: SelectChangeEvent<string>) => {
-    const newFilters = { ...filters, quickDateRange: event.target.value };
+    const value = event.target.value;
+    setGlobalFilters({ quickDateRange: value });
+    const newFilters = { ...filters, quickDateRange: value };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 
   const handleSessionTypesChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
-    const newFilters = {
-      ...filters,
-      sessionTypes: typeof value === "string" ? value.split(",") : value,
-    };
-    setFilters(newFilters);
-    onFilterChange?.(newFilters);
-  };
-
-  const handleInjuryStatusChange = (event: SelectChangeEvent<string>) => {
-    const newFilters = { ...filters, injuryStatus: event.target.value };
+    const types = typeof value === "string" ? value.split(",") : value;
+    setGlobalFilters({ sessionTypes: types });
+    const newFilters = { ...filters, sessionTypes: types };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
@@ -131,8 +112,7 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box
+    <Box
         sx={{
           display: "flex",
           gap: 2,
@@ -141,14 +121,54 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
           pb: 1,
         }}
       >
+        {/* Team Filter (global) - placed first in layout */}
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel variant="outlined">Team</InputLabel>
+          <Select
+            variant="outlined"
+            value={filters.teamId || globalFilters.teamId}
+            onChange={(e: SelectChangeEvent<string>) => {
+              const value = e.target.value;
+              setGlobalFilters({ teamId: value });
+              const newFilters = { ...filters, teamId: value };
+              setFilters(newFilters);
+              onFilterChange?.(newFilters);
+            }}
+            label="Team"
+            sx={{
+              backgroundColor: 'white',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--border-default)',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--primary-main)',
+              },
+            }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {NFL_TEAMS.map((team) => (
+              <MenuItem key={team.id} value={String(team.id)}>
+                {team.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         {/* Season Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel variant="filled">Season</InputLabel>
+          <InputLabel variant="outlined">Season</InputLabel>
           <Select
-            variant="filled"
+            variant="outlined"
             value={filters.season}
             onChange={handleSeasonChange}
             label="Season"
+            sx={{
+              backgroundColor: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-default)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--primary-main)' },
+            }}
           >
             <MenuItem value="">
               <em>None</em>
@@ -163,12 +183,17 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
 
         {/* Benchmark Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel variant="filled">Benchmark</InputLabel>
+          <InputLabel variant="outlined">Benchmark</InputLabel>
           <Select
-            variant="filled"
+            variant="outlined"
             value={filters.benchmarkValue}
             onChange={handleBenchmarkChange}
             label="Benchmark"
+            sx={{
+              backgroundColor: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-default)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--primary-main)' },
+            }}
           >
             <MenuItem value="">
               <em>None</em>
@@ -181,44 +206,21 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
           </Select>
         </FormControl>
 
-        {/* Date Range Picker */}
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <DatePicker
-            value={filters.startDate}
-            onChange={handleDateRangeChange}
-            size="small"
-            label="Start Date"
-            slotProps={{
-              textField: {
-                variant: "filled",
-                size: "small",
-                sx: { minWidth: 240 },
-              },
-            }}
-          />
-          <DatePicker
-            value={filters.endDate}
-            onChange={handleEndDateChange}
-            size="small"
-            label="End Date"
-            slotProps={{
-              textField: {
-                variant: "filled",
-                size: "small",
-                sx: { minWidth: 240 },
-              },
-            }}
-          />
-        </Box>
+        {/* NOTE: start/end date inputs removed — Weeks Range handles period selection */}
 
-        {/* Set Periods Filter */}
+        {/* Weeks Range Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel variant="filled">Set Periods</InputLabel>
+          <InputLabel variant="outlined">Weeks Range</InputLabel>
           <Select
-            variant="filled"
+            variant="outlined"
             value={filters.quickDateRange}
             onChange={handleQuickDateRangeChange}
-            label="Set Periods"
+            label="Weeks Range"
+            sx={{
+              backgroundColor: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-default)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--primary-main)' },
+            }}
           >
             <MenuItem value="">
               <em>Custom</em>
@@ -233,13 +235,18 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
 
         {/* Session Types Filter */}
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel variant="filled">Session Types</InputLabel>
+          <InputLabel variant="outlined">Session Types</InputLabel>
           <Select
-            variant="filled"
+            variant="outlined"
             multiple
             value={filters.sessionTypes}
             onChange={handleSessionTypesChange}
             label="Session Types"
+            sx={{
+              backgroundColor: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--border-default)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--primary-main)' },
+            }}
             renderValue={(selected) => (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {selected.map((value) => (
@@ -268,48 +275,7 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
           </Select>
         </FormControl>
 
-        {/* Injury Status Filter */}
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel variant="filled">Injury Status</InputLabel>
-          <Select
-            variant="filled"
-            value={filters.injuryStatus}
-            onChange={handleInjuryStatusChange}
-            label="Injury Status"
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {INJURY_STATUS_OPTIONS.map((status) => (
-              <MenuItem key={status} value={status}>
-                {status}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Team Filter */}
-        {showTeamFilter && (
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel variant="filled">Team</InputLabel>
-            <Select
-              variant="filled"
-              value={filters.teamId}
-              onChange={handleTeamChange}
-              label="Team"
-            >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {NFL_TEAMS.map((team) => (
-                <MenuItem key={team.id} value={team.id}>
-                  {team.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
+        {/* Removed local-only filters — only the 4 global filters are shown here */}
       </Box>
-    </LocalizationProvider>
   );
 }

@@ -157,3 +157,43 @@ export function getBenchmarkData(
     oneYearNFLAvg,
   };
 }
+
+// Returns missed-time injuries (>3 days) grouped by player position for a team/season
+export function getMissedTimeByPosition(teamId: number, season: number): Array<{ position: string; missedTimeInjuries: number }> {
+  // Collect injuries for the team and season
+  const teamSeasonInjuries = INJURY_RECORDS.filter(
+    (rec) => rec.teamId === teamId && rec.season === season && rec.daysOut > 3
+  );
+
+  // Aggregate counts by position
+  const positionCounts: Record<string, number> = {};
+
+  teamSeasonInjuries.forEach((inj) => {
+    const pos = inj.position || "Unknown";
+    positionCounts[pos] = (positionCounts[pos] || 0) + 1;
+  });
+
+  // Convert to array and sort by a consistent position order if available
+  const result = Object.keys(positionCounts).map((pos) => ({
+    position: pos,
+    missedTimeInjuries: positionCounts[pos],
+  }));
+
+  // Try to preserve POSITIONS ordering if available
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { POSITIONS } = require("./nflTeams");
+    result.sort((a, b) => {
+      const ai = POSITIONS.indexOf(a.position as string);
+      const bi = POSITIONS.indexOf(b.position as string);
+      if (ai === -1 && bi === -1) return a.position.localeCompare(b.position);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  } catch (e) {
+    result.sort((a, b) => b.missedTimeInjuries - a.missedTimeInjuries);
+  }
+
+  return result;
+}

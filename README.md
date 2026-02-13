@@ -4,7 +4,7 @@ A clean, production-ready template for building React applications with Material
 
 ## 📁 Project Structure
 
-```
+```text
 /
 ├── guidelines/
 │   └── Guidelines.md          # Component usage guidelines
@@ -160,12 +160,14 @@ Edit `/src/styles/global.css`:
 Import any of these from `./components/playbook`:
 
 ### Input Components
+
 - `Button`, `IconButton`, `Fab`, `LoadingButton`
 - `TextField`, `Select`, `Autocomplete`
 - `Checkbox`, `Radio`, `RadioGroup`, `Switch`
 - `Slider`, `Rating`
 
 ### Data Display
+
 - `Typography`, `Avatar`, `Badge`, `Chip`
 - `Table`, `TableBody`, `TableCell`, `TableHead`, `TableRow`
 - `List`, `ListItem`, `ListItemText`, `ListItemIcon`
@@ -173,21 +175,26 @@ Import any of these from `./components/playbook`:
 - `DataGrid` (from @mui/x-data-grid-pro)
 
 ### Feedback
+
 - `Alert`, `Snackbar`, `Dialog`
 - `CircularProgress`, `LinearProgress`
 - `Skeleton`, `Backdrop`
 
 ### Surfaces
+
 - `Card`, `Paper`, `Accordion`, `AppBar`
 
 ### Navigation
+
 - `Tabs`, `Drawer`, `Menu`, `Breadcrumbs`
 - `Stepper`, `Pagination`
 
 ### Layout
+
 - `Box`, `Container`, `Stack`, `Grid`
 
 ### Date/Time Pickers
+
 - `DatePicker`, `DateRangePicker`, `DateTimePicker`
 - `TimePicker`
 - (from @mui/x-date-pickers-pro)
@@ -326,11 +333,13 @@ The design system CSS variables are synchronized with `@saarbyrne/playbook v1.23
 ## 🛠️ Development Workflow
 
 1. **Start Development**
+
    ```bash
    npm run dev
    ```
 
 2. **Edit Design System**
+
    - Open `/src/styles/global.css`
    - Change variables (colors, spacing, etc.)
    - Save and see changes instantly
@@ -341,6 +350,7 @@ The design system CSS variables are synchronized with `@saarbyrne/playbook v1.23
    - Follow guidelines in `/guidelines/Guidelines.md`
 
 4. **Build for Production**
+
    ```bash
    npm run build
    ```
@@ -364,6 +374,7 @@ This template is ready to use:
 5. ✅ Clean starting point with no demo components
 
 **To use:**
+
 1. Copy this entire project
 2. Read `/DESIGN_SYSTEM.md` and `/guidelines/Guidelines.md`
 3. Edit `/src/styles/global.css` to customize your design
@@ -377,6 +388,48 @@ This template is ready to use:
 - `@mui/x-date-pickers-pro` - Date/time pickers
 - `react` + `react-dom` - React framework
 - `tailwindcss` v4 - Utility classes (optional)
+
+## 🚀 Deployment
+
+### Deploying to Vercel
+
+This project is configured for seamless deployment to Vercel:
+
+1. **Push to GitHub:**
+
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Connect to Vercel:**
+
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "Add New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect the Vite framework settings
+
+3. **Verify Settings:**
+   - **Framework:** Vite (auto-detected)
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm ci`
+   - **Node Version:** 18.x or higher
+
+4. **Deploy:**
+   - Click "Deploy" and Vercel will build and deploy your app
+   - Your app will be live at `https://your-project.vercel.app`
+
+### Build Locally
+
+Test the production build before deploying:
+
+```bash
+npm run build
+```
+
+The build output will be in `dist/`.
 
 ## 🎓 Learning Resources
 

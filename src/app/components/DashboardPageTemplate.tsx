@@ -1,4 +1,6 @@
 import { Box, Grid, IconButton } from "@/app/components/playbook";
+import { useState } from "react";
+import { getChartColors } from "@/app/components/looker/chartConfig";
 import { MainNavigation } from "@/app/components/MainNavigation";
 import { AppBarHeader } from "@/app/components/AppBarHeader";
 import { Header } from "@/app/components/Header";
@@ -12,9 +14,9 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { useState } from "react";
-
+  const themeChartColors = typeof window !== 'undefined' ? getChartColors(8) : [];
 export function DashboardPageTemplate() {
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -28,7 +30,7 @@ export function DashboardPageTemplate() {
       }}
     >
       {/* Main Navigation */}
-      <MainNavigation />
+      <MainNavigation isExpanded={isNavExpanded} onToggle={setIsNavExpanded} />
 
       {/* Main Content */}
       <Box
@@ -37,6 +39,8 @@ export function DashboardPageTemplate() {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          marginLeft: isNavExpanded ? "240px" : "72px",
+          transition: "margin-left 0.3s ease",
         }}
       >
         {/* AppBar Header */}
@@ -69,7 +73,7 @@ export function DashboardPageTemplate() {
               flex: 1,
               px: "var(--spacing-6)",
               py: "var(--spacing-4)",
-              backgroundColor: "#fafafa",
+              backgroundColor: "var(--background)",
               overflow: "auto",
             }}
           >
@@ -79,12 +83,12 @@ export function DashboardPageTemplate() {
                 <>
                   <IconButton
                     sx={{
-                      backgroundColor: "#F1F2F3",
+                      backgroundColor: "var(--muted)",
                       color: "var(--color-text-primary)",
                       borderRadius: "var(--radius-sm)",
                       p: "var(--spacing-2)",
                       "&:hover": {
-                        backgroundColor: "#E0E1E2",
+                        backgroundColor: "var(--border)",
                       },
                     }}
                   >
@@ -93,12 +97,12 @@ export function DashboardPageTemplate() {
                   <IconButton
                     onClick={() => setFiltersOpen(!filtersOpen)}
                     sx={{
-                      backgroundColor: filtersOpen ? "#E0E1E2" : "#F1F2F3",
+                      backgroundColor: filtersOpen ? "var(--border)" : "var(--muted)",
                       color: "var(--color-text-primary)",
                       borderRadius: "var(--radius-sm)",
                       p: "var(--spacing-2)",
                       "&:hover": {
-                        backgroundColor: "#E0E1E2",
+                        backgroundColor: "var(--border)",
                       },
                     }}
                   >
@@ -107,12 +111,12 @@ export function DashboardPageTemplate() {
                   <IconButton
                     onClick={() => setDrawerOpen(!drawerOpen)}
                     sx={{
-                      backgroundColor: "#F1F2F3",
+                      backgroundColor: "var(--muted)",
                       color: "var(--color-text-primary)",
                       borderRadius: "var(--radius-sm)",
                       p: "var(--spacing-2)",
                       "&:hover": {
-                        backgroundColor: "#E0E1E2",
+                        backgroundColor: "var(--border)",
                       },
                     }}
                   >
@@ -120,12 +124,12 @@ export function DashboardPageTemplate() {
                   </IconButton>
                   <IconButton
                     sx={{
-                      backgroundColor: "#F1F2F3",
+                      backgroundColor: "var(--muted)",
                       color: "var(--color-text-primary)",
                       borderRadius: "var(--radius-sm)",
                       p: "var(--spacing-2)",
                       "&:hover": {
-                        backgroundColor: "#E0E1E2",
+                        backgroundColor: "var(--border)",
                       },
                     }}
                   >
@@ -136,23 +140,23 @@ export function DashboardPageTemplate() {
               sx={{ mb: "var(--spacing-4)" }}
             />
             {filtersOpen && <FilterBar2 />}
-            <Grid container spacing="var(--spacing-4)">
+              <Grid container spacing="var(--spacing-4)">
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <MetricCard value="250" label="Total Athletes" color="#4285F4" />
+                <MetricCard value="250" label="Total Athletes" color={themeChartColors[0] || 'var(--chart-blue-medium)'} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <MetricCard
                   value="500"
                   label="Training Sessions"
                   trend={{ value: "12%", isPositive: true }}
-                  color="#34A853"
+                  color={themeChartColors[1] || 'var(--chart-2)'}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <MetricCard value="3" label="Injuries" color="#EA4335" />
+                <MetricCard value="3" label="Injuries" color={themeChartColors[2] || 'var(--chart-3)'} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <GaugeCard value={85} label="Avg Fitness" color="#7B61FF" />
+                <GaugeCard value={85} label="Avg Fitness" color={themeChartColors[3] || 'var(--chart-4)'} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <BarChartCard
@@ -165,7 +169,7 @@ export function DashboardPageTemplate() {
                   ]}
                   dataKey="load"
                   xAxisKey="week"
-                  color="#4285F4"
+                  color={themeChartColors[0] || 'var(--chart-1)'}
                   height={250}
                 />
               </Grid>
@@ -178,7 +182,11 @@ export function DashboardPageTemplate() {
                     { name: "Flexibility", value: 20 },
                     { name: "Sports", value: 25 },
                   ]}
-                  colors={["#4285F4", "#34A853", "#FBBC04", "#7B61FF"]}
+                  colors={
+                    themeChartColors.length
+                      ? [themeChartColors[0], themeChartColors[1], themeChartColors[4], themeChartColors[7]]
+                      : ["var(--chart-1)", "var(--chart-2)", "var(--chart-5)", "var(--chart-8)"]
+                  }
                   height={250}
                 />
               </Grid>

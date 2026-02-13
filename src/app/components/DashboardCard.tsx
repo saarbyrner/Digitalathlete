@@ -1,12 +1,6 @@
 import { useState } from "react";
-import {
-  Paper,
-  Typography,
-  IconButton,
-  Menu,
-  MenuItem,
-  Box,
-} from "@/app/components/playbook";
+import { Paper, Typography, IconButton, Menu, MenuItem, Box } from "@/app/components/playbook";
+import DashboardPreview from "./DashboardPreview";
 import { MoreVert as MoreVertIcon } from "@mui/icons-material";
 
 interface DashboardCardProps {
@@ -14,6 +8,7 @@ interface DashboardCardProps {
   date: string;
   title: string;
   thumbnailColor?: string;
+  previewVariant?: "bar" | "donut" | "horizontal";
   onClick?: () => void;
   onMove?: () => void;
   onCopy?: () => void;
@@ -25,7 +20,8 @@ export function DashboardCard({
   folderName,
   date,
   title,
-  thumbnailColor = "#E8EAED",
+  thumbnailColor = "var(--chart-blue-light)",
+  previewVariant = "bar",
   onClick,
   onMove,
   onCopy,
@@ -61,6 +57,7 @@ export function DashboardCard({
         overflow: "hidden",
         cursor: onClick ? "pointer" : "default",
         transition: "all 0.2s ease",
+        backgroundColor: "var(--white)",
         "&:hover": {
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
           borderColor: "var(--border-hover)",
@@ -70,40 +67,24 @@ export function DashboardCard({
       {/* Chart Thumbnail Preview */}
       <Box
         sx={{
-          height: "180px",
-          backgroundColor: thumbnailColor,
+          backgroundColor: "var(--background)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          width: "100%",
+          aspectRatio: "16/9",
+          maxHeight: "220px",
+          minHeight: "120px",
         }}
       >
-        <Box
-          sx={{
-            width: "80%",
-            height: "70%",
-            backgroundColor: "rgba(255, 255, 255, 0.6)",
-            borderRadius: "var(--radius-sm)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              fontFamily: "var(--font-family-base)",
-              color: "var(--text-secondary)",
-            }}
-          >
-            Chart Preview
-          </Typography>
-        </Box>
+        <DashboardPreview variant={previewVariant} color="var(--primary-main)" />
       </Box>
 
       {/* Card Footer */}
       <Box
         sx={{
           p: "var(--spacing-3)",
+          backgroundColor: "var(--white)",
         }}
       >
         <Typography

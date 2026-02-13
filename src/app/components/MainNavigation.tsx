@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
-import logoImage from "figma:asset/98f4ac68bfc15039b02acb18b947b9fe9a5934ad.png";
+// Use the NFL logo added to assets
+import nflLogo from "../assets/nfl-logo.png";
 
 interface NavigationItem {
   label: string;
@@ -41,13 +42,20 @@ const menuItems: NavigationItem[] = [
   { label: "Admin", icon: <SettingsOutlined /> },
 ];
 
-export function MainNavigation() {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface MainNavigationProps {
+  isExpanded?: boolean;
+  onToggle?: (next: boolean) => void;
+}
+
+export function MainNavigation({ isExpanded: isExpandedProp, onToggle }: MainNavigationProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const toggleNavigation = () => {
-    setIsExpanded(!isExpanded);
+    const next = !(isExpandedProp ?? internalExpanded);
+    if (typeof onToggle === "function") onToggle(next);
+    if (isExpandedProp === undefined) setInternalExpanded(next);
   };
 
   const handleNavItemClick = (item: NavigationItem) => {
@@ -58,20 +66,28 @@ export function MainNavigation() {
 
   const isActive = (item: NavigationItem) => {
     if (!item.path) return false;
-    return location.pathname === item.path || location.pathname.startsWith("/dashboards");
+    if (item.path === "/") {
+      return location.pathname === "/" || location.pathname.startsWith("/dashboards");
+    }
+    return location.pathname === item.path;
   };
+
+  const isExpanded = isExpandedProp ?? internalExpanded;
 
   return (
     <Box
       sx={{
-        width: isExpanded ? "240px" : "72px",
-        height: "100%",
+        width: (isExpandedProp ?? internalExpanded) ? "240px" : "72px",
+        height: "100vh",
         background:
-          "linear-gradient(180deg, #000814 0%, #1a365d 100%)",
+          "linear-gradient(180deg, var(--nav-background) 0%, var(--nav-background-dark) 100%)",
         display: "flex",
         flexDirection: "column",
         transition: "width 0.3s ease",
-        position: "relative",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 1200,
         overflow: "hidden",
         flexShrink: 0,
       }}
@@ -88,8 +104,8 @@ export function MainNavigation() {
         }}
       >
         <img
-          src={logoImage}
-          alt="Logo"
+          src={nflLogo}
+          alt="NFL Logo"
           style={{
             width: "40px",
             height: "40px",
@@ -125,7 +141,7 @@ export function MainNavigation() {
                   mb: "var(--spacing-1)",
                   minHeight: "48px",
                   px: "var(--spacing-2)",
-                  color: "#ffffff",
+                  color: "var(--white)",
                   fontFamily: "var(--font-family-base)",
                   justifyContent: isExpanded
                     ? "flex-start"
@@ -138,7 +154,7 @@ export function MainNavigation() {
               >
                 <ListItemIcon
                   sx={{
-                    color: "#ffffff",
+                    color: "var(--white)",
                     minWidth: isExpanded ? "40px" : "auto",
                     justifyContent: "center",
                   }}
@@ -181,7 +197,7 @@ export function MainNavigation() {
               mb: "var(--spacing-1)",
               minHeight: "48px",
               px: "var(--spacing-2)",
-              color: "#ffffff",
+                  color: "var(--white)",
               fontFamily: "var(--font-family-base)",
               justifyContent: isExpanded
                 ? "flex-start"
@@ -193,7 +209,7 @@ export function MainNavigation() {
           >
             <ListItemIcon
               sx={{
-                color: "#ffffff",
+                color: "var(--white)",
                 minWidth: isExpanded ? "40px" : "auto",
                 justifyContent: "center",
               }}
@@ -228,7 +244,7 @@ export function MainNavigation() {
           <IconButton
             onClick={toggleNavigation}
             sx={{
-              color: "#ffffff",
+              color: "var(--white)",
               "&:hover": {
                 backgroundColor: "rgba(255, 255, 255, 0.08)",
               },

@@ -70,20 +70,20 @@ export function Header({
   const getChipStyles = (color: ChipData["color"]) => {
     const styles = {
       error: {
-        backgroundColor: "#C31D2B",
-        color: "#ffffff",
+        backgroundColor: "var(--destructive)",
+        color: "var(--destructive-foreground)",
       },
       warning: {
-        backgroundColor: "#EF6C00",
-        color: "#ffffff",
+        backgroundColor: "var(--orange-400)",
+        color: "var(--white)",
       },
       info: {
-        backgroundColor: "#FFDD00",
-        color: "#1F2D44",
+        backgroundColor: "var(--yellow-100)",
+        color: "var(--text-primary)",
       },
       default: {
-        backgroundColor: "#C31D2B",
-        color: "#ffffff",
+        backgroundColor: "var(--muted)",
+        color: "var(--text-primary)",
       },
     };
     return styles[color] || styles.default;
@@ -135,7 +135,7 @@ export function Header({
               fontFamily: "var(--font-family-base)",
               fontSize: "var(--font-size-h6)",
               fontWeight: "var(--font-weight-semibold)",
-              color: "var(--color-text-grey)",
+              color: "var(--color-chart-metric-label)",
               lineHeight: 1.334,
             }} className="text-[rgb(166,166,166)]"
           >
@@ -203,7 +203,7 @@ export function Header({
                     fontFamily: "var(--font-family-base)",
                     fontSize: "var(--font-size-body2)",
                     fontWeight: "var(--font-weight-regular)",
-                    color: "#212121",
+                    color: "var(--color-text-primary)",
                     lineHeight: 1.43,
                   }}
                 >
@@ -255,7 +255,7 @@ export function Header({
             variant="contained"
             onClick={onButtonClick}
             sx={{
-              backgroundColor: "#F1F2F3",
+              backgroundColor: "var(--muted)",
               color: "var(--color-text-primary)",
               fontFamily: "var(--font-family-base)",
               fontSize: "var(--font-size-body2)",
@@ -263,7 +263,7 @@ export function Header({
               textTransform: "none",
               boxShadow: "none",
               "&:hover": {
-                backgroundColor: "#E0E1E2",
+                backgroundColor: "var(--border)",
                 boxShadow: "none",
               },
             }}
@@ -276,12 +276,12 @@ export function Header({
           <IconButton
             onClick={onMoreMenuClick}
             sx={{
-              backgroundColor: "#F1F2F3",
+              backgroundColor: "var(--muted)",
               color: "var(--color-text-primary)",
               borderRadius: "var(--radius-sm)",
               p: "var(--spacing-2)",
               "&:hover": {
-                backgroundColor: "#E0E1E2",
+                backgroundColor: "var(--border)",
               },
             }}
           >

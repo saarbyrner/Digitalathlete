@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Box,
@@ -21,6 +21,7 @@ import {
   CreateNewFolder as CreateNewFolderIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
+import { getChartColors } from "@/app/components/looker/chartConfig";
 
 interface Dashboard {
   id: number;
@@ -29,6 +30,7 @@ interface Dashboard {
   title: string;
   thumbnailColor?: string;
   type: string;
+  category: "favourites" | "my" | "shared";
 }
 
 const dashboardTypes: Dashboard[] = [
@@ -37,90 +39,119 @@ const dashboardTypes: Dashboard[] = [
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Dashboard",
-    thumbnailColor: "#E8EAF6",
     type: "dashboard",
+    category: "shared",
   },
   {
     id: 2,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Missed Time",
-    thumbnailColor: "#E3F2FD",
     type: "missed-time",
+    category: "shared",
   },
   {
     id: 3,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Concussion",
-    thumbnailColor: "#F3E5F5",
     type: "concussion",
+    category: "shared",
   },
   {
     id: 4,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Shoulder",
-    thumbnailColor: "#FFF3E0",
     type: "shoulder",
+    category: "shared",
   },
   {
     id: 5,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "LEX Sprain",
-    thumbnailColor: "#FFEBEE",
     type: "lex-sprain",
+    category: "shared",
   },
   {
     id: 6,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "LEX Strain",
-    thumbnailColor: "#E8F5E9",
     type: "lex-strain",
+    category: "shared",
   },
   {
     id: 7,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "ACL",
-    thumbnailColor: "#FFF9C4",
     type: "acl",
+    category: "shared",
   },
   {
     id: 8,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Hamstring",
-    thumbnailColor: "#E0F2F1",
     type: "hamstring",
+    category: "shared",
   },
   {
     id: 9,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Other Injuries",
-    thumbnailColor: "#FCE4EC",
     type: "other-injuries",
+    category: "shared",
   },
   {
     id: 10,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Recovery Time",
-    thumbnailColor: "#E1F5FE",
     type: "recovery-time",
+    category: "shared",
   },
   {
     id: 11,
     folderName: "Analysis",
     date: "11 Feb 2026",
     title: "Team View",
-    thumbnailColor: "#F1F8E9",
     type: "team-view",
+    category: "shared",
+  },
+  {
+    id: 12,
+    folderName: "Analysis",
+    date: "13 Feb 2026",
+    title: "Rehab",
+    type: "rehab",
+    category: "my",
   },
 ];
+
+  function mapDashboardTypeToPreviewVariant(type: string) {
+    switch (type) {
+      case "missed-time":
+      case "team-view":
+        return "horizontal" as const;
+      case "rehab":
+        return "donut" as const;
+      case "dashboard":
+      case "concussion":
+      case "shoulder":
+      case "acl":
+      case "lex-sprain":
+      case "lex-strain":
+      case "hamstring":
+      case "other-injuries":
+      case "recovery-time":
+      default:
+        return "bar" as const;
+    }
+  }
 
 export function DashboardsHome() {
   const navigate = useNavigate();
@@ -130,6 +161,24 @@ export function DashboardsHome() {
   const [rowsPerPage, setRowsPerPage] = useState(12);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const tabCategory = selectedTab === 0 ? "favourites" : selectedTab === 1 ? "my" : "shared";
+
+  const filteredDashboards = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return dashboardTypes.filter((dashboard) => {
+      const matchesCategory = dashboard.category === tabCategory;
+      if (!matchesCategory) return false;
+
+      if (!normalizedQuery) return true;
+
+      return (
+        dashboard.title.toLowerCase().includes(normalizedQuery) ||
+        dashboard.folderName.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [searchQuery, tabCategory]);
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
   };
@@ -137,6 +186,11 @@ export function DashboardsHome() {
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
   };
+
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
+
+  // Runtime-computed chart colors for thumbnails (falls back to static thumbnailColor)
+  const themeChartColors = typeof window !== 'undefined' ? getChartColors(12) : [];
 
   const handleDashboardClick = (type: string) => {
     navigate(`/dashboards/${type}`);
@@ -152,7 +206,7 @@ export function DashboardsHome() {
       }}
     >
       {/* Main Navigation */}
-      <MainNavigation />
+      <MainNavigation isExpanded={isNavExpanded} onToggle={setIsNavExpanded} />
 
       {/* Main Content */}
       <Box
@@ -161,6 +215,8 @@ export function DashboardsHome() {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          marginLeft: isNavExpanded ? "240px" : "72px",
+          transition: "margin-left 0.3s ease",
         }}
       >
         {/* AppBar Header */}
@@ -177,7 +233,7 @@ export function DashboardsHome() {
         <Box
           sx={{
             flexGrow: 1,
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--background)",
             display: "flex",
             flexDirection: "column",
           }}
@@ -333,7 +389,6 @@ export function DashboardsHome() {
               <Tab label="Favourites" />
               <Tab label="My folder" />
               <Tab label="Shared folder" />
-              <Tab label="IP dashboards" />
             </Tabs>
           </Box>
 
@@ -343,16 +398,22 @@ export function DashboardsHome() {
               flexGrow: 1,
               p: "var(--spacing-4)",
               overflow: "auto",
+              backgroundColor: "var(--background)",
             }}
           >
             <Grid container spacing={3}>
-              {dashboardTypes.map((dashboard) => (
+              {filteredDashboards.map((dashboard) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={dashboard.id}>
                   <DashboardCard
                     folderName={dashboard.folderName}
                     date={dashboard.date}
                     title={dashboard.title}
-                    thumbnailColor={dashboard.thumbnailColor}
+                    thumbnailColor={
+                      themeChartColors.length
+                        ? themeChartColors[(dashboard.id - 1) % themeChartColors.length]
+                        : dashboard.thumbnailColor
+                    }
+                    previewVariant={mapDashboardTypeToPreviewVariant(dashboard.type)}
                     onClick={() => handleDashboardClick(dashboard.type)}
                     onMove={() => console.log(`Move: ${dashboard.title}`)}
                     onCopy={() => console.log(`Copy: ${dashboard.title}`)}
@@ -361,6 +422,24 @@ export function DashboardsHome() {
                   />
                 </Grid>
               ))}
+
+              {filteredDashboards.length === 0 && (
+                <Grid size={{ xs: 12 }}>
+                  <Box
+                    sx={{
+                      p: "var(--spacing-6)",
+                      border: "var(--border-width-thin) solid var(--border-default)",
+                      borderRadius: "var(--radius-lg)",
+                      backgroundColor: "var(--white)",
+                      textAlign: "center",
+                      color: "var(--text-secondary)",
+                      fontFamily: "var(--font-family-base)",
+                    }}
+                  >
+                    No dashboards match this tab.
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           </Box>
         </Box>
