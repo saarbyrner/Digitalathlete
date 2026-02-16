@@ -39,6 +39,8 @@ import {
   aggregateBodyParts,
   aggregatePlayersBySessionType,
   aggregateInjuriesBySessionType,
+  aggregateSessionsByTeam,
+  aggregateInjuriesByTeam,
   getUniquePlayers,
   getPlayerProfile,
 } from "@/app/data/rehabSessionData";
@@ -99,6 +101,33 @@ export function DashboardPage() {
   
   const { values: lookerFilterValues, handleChange: handleLookerFilterChange, handleReset: handleLookerReset, setValues: setLookerFilterValues } = useLookerFilters(lookerFilterConfig);
 
+  // Clear incompatible filter values when tab changes
+  useEffect(() => {
+    if (dashboardType !== "rehab") return;
+    
+    // Get current tab's filter dataKeys
+    const currentFilters = getRehabFiltersForTab(selectedTab);
+    const currentFilterKeys = new Set(currentFilters.map(f => f.dataKey));
+    
+    // Check if any current filter values are incompatible with new tab
+    const newFilterValues: Record<string, any> = {};
+    let needsUpdate = false;
+    
+    Object.entries(lookerFilterValues).forEach(([key, value]) => {
+      if (currentFilterKeys.has(key)) {
+        newFilterValues[key] = value;
+      } else if (value !== undefined && value !== null && value !== "") {
+        // Found an incompatible filter that would affect data
+        needsUpdate = true;
+      }
+    });
+    
+    // Only update if we actually removed some filters
+    if (needsUpdate) {
+      setLookerFilterValues(newFilterValues);
+    }
+  }, [dashboardType, selectedTab]); // Intentionally omit lookerFilterValues to avoid infinite loop
+
   // Filtered data for Rehab dashboard
   const filteredInjuryRecords = useMemo(() => {
     if (dashboardType !== "rehab") return INJURY_RECORDS;
@@ -126,7 +155,7 @@ export function DashboardPage() {
       maintenanceDonut: aggregateDonutData(filteredRehabSessions, "maintenance"),
       
       // Bar charts
-      daysLostByInjury: aggregateDaysLostByInjury(filteredInjuryRecords),
+      daysLostByInjury: aggregateDaysLostByInjury(filteredInjuryRecords, filteredRehabSessions),
       daysLostByPlayer: aggregateDaysLostByPlayer(filteredInjuryRecords, filteredRehabSessions),
       
       // Stacked/Composed charts - by date (for Player tab)
@@ -139,9 +168,16 @@ export function DashboardPage() {
       exercisesByPlayer: aggregateExercises(filteredRehabSessions, "player"),
       bodyPartsByPlayer: aggregateBodyParts(filteredRehabSessions, "player"),
       
+      // Stacked/Composed charts - by injury (for Injury tab)
+      modalityByInjury: aggregateModalityVsExercise(filteredRehabSessions, "injury"),
+      
       // Session type aggregations
       playersBySessionType: aggregatePlayersBySessionType(filteredRehabSessions),
       injuriesBySessionType: aggregateInjuriesBySessionType(filteredRehabSessions),
+      
+      // League tab: team comparisons
+      sessionsByTeam: aggregateSessionsByTeam(filteredRehabSessions),
+      injuriesByTeam: aggregateInjuriesByTeam(filteredRehabSessions),
       
       // Available players for selection
       availablePlayers: getUniquePlayers(filteredRehabSessions),
@@ -729,15 +765,15 @@ export function DashboardPage() {
                               <TableCell></TableCell>
                               <TableCell>Player</TableCell>
                               <TableCell>Rehab sessions</TableCell>
-                              <TableCell>Maintenance session</TableCell>
+                              <TableCell>Maintenance sessions</TableCell>
                               <TableCell align="right">Total</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {rehabChartData.playersBySessionType.map((row, index) => {
-                              const maxValue = Math.max(...rehabChartData.playersBySessionType.map(r => Math.max(r["Rehab sessions"], r["Maintenance session"])));
+                              const maxValue = Math.max(...rehabChartData.playersBySessionType.map(r => Math.max(r["Rehab sessions"], r["Maintenance sessions"])));
                               const rehabWidth = maxValue > 0 ? (row["Rehab sessions"] / maxValue) * 100 : 0;
-                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance session"] / maxValue) * 100 : 0;
+                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance sessions"] / maxValue) * 100 : 0;
                               
                               return (
                                 <TableRow key={index}>
@@ -932,7 +968,7 @@ export function DashboardPage() {
                     <GroupedBarChartCard
                       title="Injuries by session type"
                       data={rehabChartData.injuriesBySessionType}
-                      dataKeys={["Rehab sessions", "Maintenance session"]}
+                      dataKeys={["Rehab sessions", "Maintenance sessions"]}
                       xAxisKey="Injury category"
                       height={400}
                     />
@@ -949,15 +985,15 @@ export function DashboardPage() {
                               <TableCell></TableCell>
                               <TableCell>Injury category</TableCell>
                               <TableCell>Rehab sessions</TableCell>
-                              <TableCell>Maintenance session</TableCell>
+                              <TableCell>Maintenance sessions</TableCell>
                               <TableCell align="right">Total</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {rehabChartData.injuriesBySessionType.map((row, index) => {
-                              const maxValue = Math.max(...rehabChartData.injuriesBySessionType.map(r => Math.max(r["Rehab sessions"], r["Maintenance session"])));
+                              const maxValue = Math.max(...rehabChartData.injuriesBySessionType.map(r => Math.max(r["Rehab sessions"], r["Maintenance sessions"])));
                               const rehabWidth = maxValue > 0 ? (row["Rehab sessions"] / maxValue) * 100 : 0;
-                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance session"] / maxValue) * 100 : 0;
+                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance sessions"] / maxValue) * 100 : 0;
                               
                               return (
                                 <TableRow key={index}>
@@ -1008,13 +1044,13 @@ export function DashboardPage() {
                       </TableContainer>
                     </Paper>
 
-                    {/* Modality vs Exercise Chart */}
+                    {/* Modality vs Exercise Chart - by injury type */}
                     <ComposedBarLineChartCard
-                      title="Modality vs Exercise"
-                      data={rehabChartData.modalityByDate}
+                      title="Modality vs Exercise by Injury Type"
+                      data={rehabChartData.modalityByInjury}
                       barDataKeys={["Heat pack", "Ultrasound", "Cold Pack", "Massage", "Acupuncture"]}
                       lineDataKeys={["Exercise minutes"]}
-                      xAxisKey="date"
+                      xAxisKey="injury"
                       height={350}
                       yAxisLabel="Modality count"
                       rightYAxisLabel="Exercise mins"
@@ -1022,39 +1058,68 @@ export function DashboardPage() {
                   </Box>
                 ) : selectedTab === 4 ? (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
-                    {/* Three Donut Charts Row (Total / Rehab / Maintenance) */}
+                    {/* Team Sessions Comparison */}
+                    <GroupedBarChartCard
+                      title="Sessions by Team"
+                      data={rehabChartData.sessionsByTeam}
+                      dataKeys={["Rehab sessions", "Maintenance sessions"]}
+                      xAxisKey="team"
+                      height={400}
+                    />
+
+                    {/* Team Injury Type Distribution */}
+                    <Paper sx={{ padding: "var(--spacing-4)" }}>
+                      <Typography variant="h6" sx={{ mb: 2 }}>
+                        Injury Types by Team
+                      </Typography>
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Team</TableCell>
+                              <TableCell align="right">Total Sessions</TableCell>
+                              <TableCell align="right">Rehab Sessions</TableCell>
+                              <TableCell align="right">Maintenance Sessions</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {rehabChartData.sessionsByTeam.slice(0, 15).map((row) => (
+                              <TableRow key={row.team}>
+                                <TableCell>{row.team}</TableCell>
+                                <TableCell align="right">{row.total}</TableCell>
+                                <TableCell align="right">{row["Rehab sessions"]}</TableCell>
+                                <TableCell align="right">{row["Maintenance sessions"]}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Paper>
+
+                    {/* Three Donut Charts Row (League-wide aggregates) */}
                     <Grid container spacing={3}>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <DonutChartCard
-                          title="Total"
+                          title="League Total"
                           data={rehabChartData.totalDonut}
                           height={300}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <DonutChartCard
-                          title="Rehab"
+                          title="League Rehab"
                           data={rehabChartData.rehabDonut}
                           height={300}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <DonutChartCard
-                          title="Maintenance"
+                          title="League Maintenance"
                           data={rehabChartData.maintenanceDonut}
                           height={300}
                         />
                       </Grid>
                     </Grid>
-
-                    <BarChartCard
-                      title="Days lost x Injuries"
-                      data={rehabChartData.daysLostByInjury}
-                      dataKey="days"
-                      xAxisKey="injury"
-                      color={getChartColorValues().blueDark}
-                      height={420}
-                    />
                   </Box>
                 ) : null
               ) : dashboardType === "missed-time" && missedTimeData ? (

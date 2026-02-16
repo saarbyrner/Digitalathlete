@@ -42,6 +42,11 @@ export interface RehabSession {
   bodyPartsWorked: string[];
   exerciseMinutes: number;
   status: string; // From injury record
+  mechanismOfInjury: string; // From injury record
+  week: number; // NFL week (0=preseason, 1-18=regular, 19+=postseason)
+  seasonType: string; // "Preseason" | "Regular Season" | "Postseason"
+  daysOutSoFar: number; // Days into injury at time of this session
+  team: string; // From injury record
 }
 
 // ==========================================
@@ -156,8 +161,52 @@ function getRelatedBodyParts(bodyPart: string): string[] {
  * Generate random value using weight as probability multiplier
  */
 function generateWeightedValue(weight: number, maxValue: number = 5): number {
-  if (Math.random() > weight * 1.5) return 0; // Skip based on weight
+  // Reduced skip probability from 1.5 to 0.8 for denser data
+  if (Math.random() > weight * 0.8) return 0; // Skip based on weight
   return Math.floor(Math.random() * maxValue * weight) + (weight > 0.2 ? 1 : 0);
+}
+
+/**
+ * Calculate NFL week from date and season
+ * Returns: 0 for preseason, 1-18 for regular season, 19+ for postseason
+ */
+function calculateWeek(date: Date, season: number): number {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-11
+  
+  // Preseason: August
+  if (month === 7) return 0;
+  
+  // Regular season: Sept (week 1) through early Jan (week 18)
+  // Approximate: Sept 1 = week 1, each ~7 days = 1 week
+  if (month >= 8 && month <= 11) {
+    const dayOfMonth = date.getDate();
+    if (month === 8) return Math.min(Math.floor((dayOfMonth - 1) / 7) + 1, 4); // Sept: weeks 1-4
+    if (month === 9) return Math.min(Math.floor((dayOfMonth - 1) / 7) + 5, 8); // Oct: weeks 5-8
+    if (month === 10) return Math.min(Math.floor((dayOfMonth - 1) / 7) + 9, 13); // Nov: weeks 9-13
+    if (month === 11) return Math.min(Math.floor((dayOfMonth - 1) / 7) + 14, 18); // Dec: weeks 14-18
+  }
+  
+  // Postseason: January onward
+  if (month >= 0 && month <= 1) {
+    return 19 + Math.floor(date.getDate() / 7); // Weeks 19-22
+  }
+  
+  // Off-season
+  return 0;
+}
+
+/**
+ * Calculate season type from date
+ */
+function calculateSeasonType(date: Date): string {
+  const month = date.getMonth(); // 0-11
+  
+  if (month === 7) return "Preseason";
+  if (month >= 8 && month <= 11) return "Regular Season";
+  if (month >= 0 && month <= 1) return "Postseason";
+  
+  return "Off-Season";
 }
 
 /**
@@ -205,6 +254,9 @@ function generateSession(
   const bodyPartsWorked = relatedParts.filter(() => Math.random() > 0.3);
   if (bodyPartsWorked.length === 0) bodyPartsWorked.push(bodyPart);
 
+  // Calculate days into injury at time of this session
+  const daysSinceInjury = Math.floor((sessionDate.getTime() - injury.injuryDate.getTime()) / (24 * 60 * 60 * 1000));
+
   return {
     id: `RS-${injury.id}-${sessionIndex}`,
     playerId: injury.playerId,
@@ -220,6 +272,11 @@ function generateSession(
     bodyPartsWorked,
     exerciseMinutes,
     status: injury.status,
+    mechanismOfInjury: injury.mechanismOfInjury || "Unknown",
+    week: calculateWeek(sessionDate, injury.season),
+    seasonType: calculateSeasonType(sessionDate),
+    daysOutSoFar: daysSinceInjury,
+    team: injury.teamName,
   };
 }
 
@@ -230,26 +287,14 @@ function generateRehabSessions(): RehabSession[] {
   const sessions: RehabSession[] = [];
   const today = new Date();
 
-  // Filter to injuries that would have rehab sessions
-  // Include active injuries and recently recovered ones
-  const relevantInjuries = INJURY_RECORDS.filter((injury) => {
-    // Skip very old injuries (more than 2 years ago)
-    const twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
-    if (injury.injuryDate < twoYearsAgo) return false;
-
-    // Include if: currently injured, limited, or recovered within last year
-    if (injury.status === "Out" || injury.status === "Limited") return true;
-    if (injury.status === "Recovered" && injury.returnDate) {
-      const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-      return injury.returnDate > oneYearAgo;
-    }
-    return false;
-  });
+  // Generate sessions for ALL injuries to ensure rich data across all filters
+  // This provides better user experience with meaningful data in all tabs
+  const relevantInjuries = INJURY_RECORDS;
 
   relevantInjuries.forEach((injury) => {
-    // Calculate number of sessions based on days out
-    const minSessions = 3;
-    const maxSessions = Math.min(20, Math.floor(injury.daysOut / 3) + 3);
+    // Calculate number of sessions based on days out - increased for richer data
+    const minSessions = 10;
+    const maxSessions = Math.min(40, Math.floor(injury.daysOut / 2) + 10);
     const numSessions = minSessions + Math.floor(Math.random() * (maxSessions - minSessions));
 
     // Generate session dates spread across recovery period
@@ -293,8 +338,8 @@ export interface DaysLostByInjuryPoint {
 
 export interface DaysLostByPlayerPoint {
   player: string;
-  "Rehab days": number;
-  "Maintenance days": number;
+  "Rehab sessions": number;
+  "Maintenance sessions": number;
   total: number;
 }
 
@@ -328,14 +373,14 @@ export interface BodyPartDataPoint {
 export interface SessionTypeDataPoint {
   player: string;
   "Rehab sessions": number;
-  "Maintenance session": number;
+  "Maintenance sessions": number;
   total?: number;
 }
 
 export interface InjurySessionTypePoint {
   "Injury category": string;
   "Rehab sessions": number;
-  "Maintenance session": number;
+  "Maintenance sessions": number;
 }
 
 /**
@@ -374,10 +419,8 @@ export function aggregateDonutData(
 
   const total = totalModalities + totalExercises;
   if (total === 0) {
-    return [
-      { name: "Exercises", value: 50 },
-      { name: "Modalities", value: 50 },
-    ];
+    // Return empty array for "No data" state rather than fake 50/50 split
+    return [];
   }
 
   return [
@@ -389,9 +432,42 @@ export function aggregateDonutData(
 /**
  * Aggregate injury records into days lost by injury type
  */
-export function aggregateDaysLostByInjury(records: InjuryRecord[]): DaysLostByInjuryPoint[] {
-  const byInjury: Record<string, number> = {};
+export function aggregateDaysLostByInjury(
+  records: InjuryRecord[],
+  sessions?: RehabSession[]
+): DaysLostByInjuryPoint[] {
+  // If sessions provided, use them to aggregate (ensures filter consistency)
+  // Otherwise fall back to injury records
+  if (sessions && sessions.length > 0) {
+    const byInjury: Record<string, Set<string>> = {};
+    
+    // Track unique injury IDs per injury type from filtered sessions
+    sessions.forEach((session) => {
+      const key = session.injuryType;
+      if (!byInjury[key]) {
+        byInjury[key] = new Set();
+      }
+      byInjury[key].add(session.injuryId);
+    });
 
+    // Get days out for each unique injury
+    const result: DaysLostByInjuryPoint[] = [];
+    Object.entries(byInjury).forEach(([injuryType, injuryIds]) => {
+      let totalDays = 0;
+      injuryIds.forEach((injuryId) => {
+        const record = records.find((r) => r.id === injuryId);
+        if (record) {
+          totalDays += record.daysOut;
+        }
+      });
+      result.push({ injury: injuryType, days: totalDays });
+    });
+
+    return result.sort((a, b) => b.days - a.days).slice(0, 15);
+  }
+
+  // Fallback: aggregate directly from records
+  const byInjury: Record<string, number> = {};
   records.forEach((record) => {
     const key = record.injuryType;
     byInjury[key] = (byInjury[key] || 0) + record.daysOut;
@@ -410,12 +486,12 @@ export function aggregateDaysLostByPlayer(
   records: InjuryRecord[],
   sessions: RehabSession[]
 ): DaysLostByPlayerPoint[] {
-  const byPlayer: Record<string, { rehab: number; maintenance: number; total: number }> = {};
+  const byPlayer: Record<string, { rehab: number; maintenance: number; daysOut: number }> = {};
 
-  // Group sessions by player
+  // Group sessions by player and count session types
   sessions.forEach((session) => {
     if (!byPlayer[session.playerName]) {
-      byPlayer[session.playerName] = { rehab: 0, maintenance: 0, total: 0 };
+      byPlayer[session.playerName] = { rehab: 0, maintenance: 0, daysOut: 0 };
     }
     if (session.sessionType === "rehab") {
       byPlayer[session.playerName].rehab++;
@@ -424,20 +500,19 @@ export function aggregateDaysLostByPlayer(
     }
   });
 
-  // Also factor in days out from injury records
+  // Get actual days out from injury records for context
   records.forEach((record) => {
-    if (!byPlayer[record.playerName]) {
-      byPlayer[record.playerName] = { rehab: 0, maintenance: 0, total: 0 };
+    if (byPlayer[record.playerName]) {
+      byPlayer[record.playerName].daysOut += record.daysOut;
     }
-    byPlayer[record.playerName].total += record.daysOut;
   });
 
   return Object.entries(byPlayer)
     .map(([player, data]) => ({
       player,
-      "Rehab days": data.rehab,
-      "Maintenance days": data.maintenance,
-      total: data.total || data.rehab + data.maintenance,
+      "Rehab sessions": data.rehab,
+      "Maintenance sessions": data.maintenance,
+      total: data.rehab + data.maintenance, // Total sessions
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 15);
@@ -448,7 +523,7 @@ export function aggregateDaysLostByPlayer(
  */
 export function aggregateModalityVsExercise(
   sessions: RehabSession[],
-  groupBy: "date" | "player"
+  groupBy: "date" | "player" | "injury"
 ): ModalityVsExercisePoint[] {
   const grouped: Record<string, ModalityVsExercisePoint> = {};
 
@@ -456,11 +531,13 @@ export function aggregateModalityVsExercise(
     const key =
       groupBy === "date"
         ? session.date.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })
-        : session.playerName;
+        : groupBy === "player"
+        ? session.playerName
+        : session.injuryType;
 
     if (!grouped[key]) {
       grouped[key] = {
-        [groupBy === "date" ? "date" : "player"]: key,
+        [groupBy === "date" ? "date" : groupBy === "player" ? "player" : "injury"]: key,
         "Heat pack": 0,
         Ultrasound: 0,
         "Cold Pack": 0,
@@ -604,7 +681,7 @@ export function aggregatePlayersBySessionType(sessions: RehabSession[]): Session
     .map(([player, data]) => ({
       player,
       "Rehab sessions": data.rehab,
-      "Maintenance session": data.maintenance,
+      "Maintenance sessions": data.maintenance,
       total: data.rehab + data.maintenance,
     }))
     .sort((a, b) => (b.total || 0) - (a.total || 0))
@@ -633,9 +710,9 @@ export function aggregateInjuriesBySessionType(sessions: RehabSession[]): Injury
     .map(([injury, data]) => ({
       "Injury category": injury,
       "Rehab sessions": data.rehab,
-      "Maintenance session": data.maintenance,
+      "Maintenance sessions": data.maintenance,
     }))
-    .sort((a, b) => (b["Rehab sessions"] + b["Maintenance session"]) - (a["Rehab sessions"] + a["Maintenance session"]))
+    .sort((a, b) => (b["Rehab sessions"] + b["Maintenance sessions"]) - (a["Rehab sessions"] + a["Maintenance sessions"]))
     .slice(0, 15);
 }
 
@@ -676,6 +753,79 @@ export function getPlayerProfile(sessions: RehabSession[], playerId: string) {
     bodyPart: first.bodyPart,
     status: first.status,
   };
+}
+
+/**
+ * Aggregate sessions by team for League tab
+ */
+export function aggregateSessionsByTeam(sessions: RehabSession[]): Array<{
+  team: string;
+  total: number;
+  "Rehab sessions": number;
+  "Maintenance sessions": number;
+}> {
+  const byTeam: Record<string, { rehab: number; maintenance: number }> = {};
+
+  sessions.forEach((session) => {
+    const team = session.team;
+    if (!byTeam[team]) {
+      byTeam[team] = { rehab: 0, maintenance: 0 };
+    }
+    if (session.sessionType === "rehab") {
+      byTeam[team].rehab++;
+    } else {
+      byTeam[team].maintenance++;
+    }
+  });
+
+  return Object.entries(byTeam)
+    .map(([team, data]) => ({
+      team,
+      total: data.rehab + data.maintenance,
+      "Rehab sessions": data.rehab,
+      "Maintenance sessions": data.maintenance,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+/**
+ * Aggregate injury types by team for League tab grouped bar chart
+ */
+export function aggregateInjuriesByTeam(sessions: RehabSession[]): Array<{
+  team: string;
+  [injuryType: string]: string | number;
+}> {
+  const byTeam: Record<string, Record<string, number>> = {};
+  const allInjuryTypes = new Set<string>();
+
+  // Collect all unique injury types and count per team
+  sessions.forEach((session) => {
+    const team = session.team;
+    const injury = session.injuryType;
+    
+    allInjuryTypes.add(injury);
+    
+    if (!byTeam[team]) {
+      byTeam[team] = {};
+    }
+    byTeam[team][injury] = (byTeam[team][injury] || 0) + 1;
+  });
+
+  // Build result with all injury types for each team
+  return Object.entries(byTeam).map(([team, injuries]) => {
+    const result: Record<string, string | number> = { team };
+    allInjuryTypes.forEach((injuryType) => {
+      result[injuryType] = injuries[injuryType] || 0;
+    });
+    return result as { team: string; [injuryType: string]: string | number };
+  }).sort((a, b) => {
+    // Sort by total injury count (sum numeric values, skip team name)
+    const aTotal = Object.entries(a).reduce((sum, [key, val]) => 
+      key !== "team" && typeof val === "number" ? sum + val : sum, 0 as number);
+    const bTotal = Object.entries(b).reduce((sum, [key, val]) => 
+      key !== "team" && typeof val === "number" ? sum + val : sum, 0 as number);
+    return bTotal - aTotal;
+  });
 }
 
 // ==========================================

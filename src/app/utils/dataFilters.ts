@@ -433,6 +433,28 @@ export function filterRehabSessions(
     );
   }
 
+  // Mechanism of injury filter
+  if (filters.mechanismOfInjury) {
+    const mechanism = (filters.mechanismOfInjury as string).toLowerCase();
+    filtered = filtered.filter((s) => 
+      s.mechanismOfInjury && s.mechanismOfInjury.toLowerCase() === mechanism
+    );
+  }
+
+  // Week filter (NFL week)
+  if (filters.week) {
+    const week = parseInt(filters.week as string);
+    if (!isNaN(week)) {
+      filtered = filtered.filter((s) => s.week === week);
+    }
+  }
+
+  // Season type filter (Preseason/Regular Season/Postseason)
+  if (filters.seasonType) {
+    const seasonType = filters.seasonType as string;
+    filtered = filtered.filter((s) => s.seasonType === seasonType);
+  }
+
   // Date range filter
   if (filters.dateRange) {
     const today = new Date();
