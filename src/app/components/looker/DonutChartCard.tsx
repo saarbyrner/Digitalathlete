@@ -1,5 +1,6 @@
 import { Paper, Typography, Box } from "@mui/material";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { ChartLegendContent } from "../ui/chart";
 import { getChartColors, tooltipConfig, legendConfig } from "./chartConfig";
 
 interface DonutChartCardProps {
@@ -54,7 +55,7 @@ export function DonutChartCard({ title, data, colors, height = 300 }: DonutChart
               ))}
             </Pie>
             <Tooltip {...tooltipConfig} />
-            <Legend {...legendConfig} />
+            <Legend {...legendConfig} content={ChartLegendContent} />
           </PieChart>
         </ResponsiveContainer>
       </Box>

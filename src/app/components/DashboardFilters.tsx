@@ -20,7 +20,7 @@ export interface FilterState {
   teamId: string; // Changed from number | null to string
 }
 
-const SEASONS = ["2024", "2023", "2022", "2021", "2020"];
+const SEASONS = ["2026", "2025", "2024", "2023", "2022", "2021"];
 const BENCHMARK_OPTIONS = ["2-Year Average", "3-Year Average", "5-Year Average"];
 const QUICK_DATE_RANGES = [
   "Off preseason - Preseason EX",
@@ -45,7 +45,7 @@ export function DashboardFilters({ onFilterChange, showTeamFilter }: DashboardFi
   const { globalFilters, setGlobalFilters } = useGlobalFilters();
 
   const [filters, setFilters] = useState<FilterState>({
-    season: globalFilters.season || "2024",
+    season: globalFilters.season || "2026",
     benchmarkValue: globalFilters.benchmarkValue || "",
     startDate: null,
     endDate: null,

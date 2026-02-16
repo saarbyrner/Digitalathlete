@@ -25,7 +25,7 @@ function buildCumulativeSeries(finalValue: number) {
 }
 
 export function SeasonTrendChart({ teamId, season, height = 340 }: SeasonTrendChartProps) {
-  const seasons = [2021, 2022, 2023, 2024];
+  const seasons = [2021, 2022, 2023, 2024, 2025, 2026];
 
   // Build per-season series using final missedTimeInjuries for that season
   const seriesBySeason = seasons.map((s) => {

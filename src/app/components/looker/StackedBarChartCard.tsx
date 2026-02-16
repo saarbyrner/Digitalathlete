@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ChartLegendContent } from "../ui/chart";
 import {
   getChartColors,
   cartesianGridConfig,
@@ -70,7 +71,7 @@ export function StackedBarChartCard({
             <XAxis dataKey={xAxisKey} {...xAxisConfig} />
             <YAxis {...yAxisConfig} />
             <Tooltip {...tooltipConfig} />
-            <Legend {...legendConfig} />
+            <Legend {...legendConfig} content={ChartLegendContent} />
             {dataKeys.map((key, index) => (
               <Bar
                 key={key}

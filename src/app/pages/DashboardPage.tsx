@@ -28,7 +28,7 @@ import { getMissedTimeByPosition } from "@/app/data/missedTimeData";
 import { NFL_TEAMS } from "@/app/data/nflTeams";
 import { POSITIONS } from "@/app/data/nflTeams";
 import { mockPlayerProfile, modalityVsExerciseData, exerciseData, bodyPartData } from "@/app/data/athleteData";
-import { timeDonutData, rehabDonutData, maintenanceDonutData, daysLostByInjuryData, daysLostByPlayerData, injuriesBySessionTypeData, injuryModalityVsExerciseData } from "@/app/data/clubRehabData";
+import { totalDonutData, rehabDonutData, maintenanceDonutData, daysLostByInjuryData, daysLostByPlayerData, injuriesBySessionTypeData, injuryModalityVsExerciseData } from "@/app/data/clubRehabData";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
@@ -66,7 +66,7 @@ export function DashboardPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [filterState, setFilterState] = useState<FilterState>({
-    season: "2024",
+    season: "2026",
     benchmarkValue: "",
     startDate: null,
     endDate: null,
@@ -74,7 +74,7 @@ export function DashboardPage() {
     sessionTypes: [],
     injuryStatus: "",
     teamId: "18", // Default to New York Giants - Changed to string
-  }); // Default to 2024 season
+  }); // Default to 2026 season
 
   // Looker-style filters - get config for current dashboard
   const lookerFilterConfig = useMemo(() => getFilterConfig(dashboardType || "missed-time"), [dashboardType]);
@@ -205,7 +205,7 @@ export function DashboardPage() {
   const missedTimeData = useMemo(() => {
     if (dashboardType !== "missed-time") return null;
 
-    const season = parseInt(filterState.season || "2024");
+    const season = parseInt(filterState.season || "2026");
     const teamId = parseInt(filterState.teamId || "18"); // Convert string to number, default to New York Giants
     const teamInfo = NFL_TEAMS.find(t => t.id === teamId);
 
@@ -530,8 +530,8 @@ export function DashboardPage() {
                     <Grid container spacing={3}>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <DonutChartCard
-                          title="Time"
-                          data={timeDonutData}
+                          title="Total"
+                          data={totalDonutData}
                           height={300}
                         />
                       </Grid>
@@ -599,7 +599,7 @@ export function DashboardPage() {
                       <Grid size={{ xs: 12, md: 4 }}>
                         <DonutChartCard
                           title="Total"
-                          data={timeDonutData}
+                          data={totalDonutData}
                           height={300}
                         />
                       </Grid>

@@ -96,6 +96,14 @@ export const legendConfig = {
   },
   iconType: "circle" as const,
   iconSize: 8,
+  // Ensure legend items align icon and label vertically
+  itemStyle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    lineHeight: 1,
+    verticalAlign: 'middle',
+  },
 };
 
 /**

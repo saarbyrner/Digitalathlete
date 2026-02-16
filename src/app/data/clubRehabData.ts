@@ -1,18 +1,18 @@
 // Mock data for Club tab in Rehab Dashboard
 
-export const timeDonutData = [
-  { name: "Days Lost", value: 35 },
-  { name: "Moderate", value: 32 },
+export const totalDonutData = [
+  { name: "Exercises", value: 75 },
+  { name: "Modalities", value: 25 },
 ];
 
 export const rehabDonutData = [
-  { name: "Days Lost", value: 35 },
-  { name: "Moderate", value: 18 },
+  { name: "Exercises", value: 62 },
+  { name: "Modalities", value: 38 },
 ];
 
 export const maintenanceDonutData = [
-  { name: "Days Lost", value: 39 },
-  { name: "Moderate", value: 20 },
+  { name: "Exercises", value: 50 },
+  { name: "Modalities", value: 50 },
 ];
 
 export const daysLostByInjuryData = [

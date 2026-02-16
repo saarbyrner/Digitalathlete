@@ -10,6 +10,7 @@ import {
   Legend,
   Cell,
 } from "recharts";
+import { ChartLegendContent } from "../ui/chart";
 import {
   cartesianGridConfig,
   xAxisConfig,
@@ -93,7 +94,7 @@ export function HorizontalBarChartCard({
               width={110}
             />
             <Tooltip {...tooltipConfig} />
-            <Legend {...legendConfig} />
+            <Legend {...legendConfig} content={ChartLegendContent} />
             <Bar dataKey="value" radius={[0, 4, 4, 0]}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />

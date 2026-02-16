@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ChartLegendContent } from "../ui/chart";
 import {
   getChartColors,
   cartesianGridConfig,
@@ -92,7 +93,7 @@ export function ComposedBarLineChartCard({
               label={rightYAxisLabel ? { value: rightYAxisLabel, angle: 90, position: 'center', style: { textAnchor: 'middle' } } : undefined}
             />
             <Tooltip {...tooltipConfig} />
-            <Legend {...legendConfig} />
+            <Legend {...legendConfig} content={ChartLegendContent} />
             {barDataKeys.map((key, index) => (
               <Bar
                 key={key}

@@ -20,7 +20,7 @@ function isMissedTimeInjury(injury: InjuryRecord): boolean {
 // Calculate missed time stats for all teams across all seasons
 export function generateMissedTimeStats(): MissedTimeStats[] {
   const stats: MissedTimeStats[] = [];
-  const seasons = [2021, 2022, 2023, 2024];
+  const seasons = [2021, 2022, 2023, 2024, 2025, 2026];
 
   NFL_TEAMS.forEach((team) => {
     seasons.forEach((season) => {

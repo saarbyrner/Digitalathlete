@@ -4,7 +4,7 @@ import { useGlobalFilters } from "@/app/contexts/GlobalFiltersContext";
 import { SelectChangeEvent } from "@mui/material";
 import { NFL_TEAMS } from "@/app/data/nflTeams";
 
-const SEASONS = ["2024", "2023", "2022", "2021", "2020"];
+const SEASONS = ["2026", "2025", "2024", "2023", "2022", "2021"];
 const BENCHMARK_OPTIONS = ["2-Year Average", "3-Year Average", "5-Year Average"];
 const QUICK_DATE_RANGES = ["Preseason to Playoffs", "Week 1 to Week 8", "Week 9 to Week 17", "Playoffs Only"];
 const SESSION_TYPES = [

@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ChartLegendContent } from "../ui/chart";
 import {
   getChartColors,
   cartesianGridConfig,
@@ -96,7 +97,7 @@ export function GroupedHorizontalBarChartCard({
               width={110}
             />
             <Tooltip {...tooltipConfig} />
-            <Legend {...legendConfig} />
+            <Legend {...legendConfig} content={ChartLegendContent} />
             {dataKeys.map((key, index) => (
               <Bar
                 key={key}

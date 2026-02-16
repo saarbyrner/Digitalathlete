@@ -261,7 +261,9 @@ function ChartLegendContent({
     hideIcon?: boolean;
     nameKey?: string;
   }) {
-  const { config } = useChart();
+  // Read context directly and fall back to empty config when provider is absent
+  const chartContext = React.useContext(ChartContext);
+  const config = chartContext?.config || ({} as ChartConfig);
 
   if (!payload?.length) {
     return null;
@@ -283,20 +285,20 @@ function ChartLegendContent({
           <div
             key={item.value}
             className={cn(
-              "[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3",
+                "flex items-center gap-2",
             )}
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
+                className="h-3 w-3 shrink-0 rounded-full"
                 style={{
                   backgroundColor: item.color,
                 }}
               />
             )}
-            {itemConfig?.label}
+            <span className="leading-none">{itemConfig?.label || item.name || item.value}</span>
           </div>
         );
       })}

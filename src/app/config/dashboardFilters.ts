@@ -12,6 +12,7 @@ import type { FilterConfig, DashboardFilterConfig } from "@/app/types/filters";
 // ==========================================
 
 const SEASON_OPTIONS = [
+  { value: "2026", label: "2026" },
   { value: "2025", label: "2025" },
   { value: "2024", label: "2024" },
   { value: "2023", label: "2023" },
@@ -121,7 +122,7 @@ export const missedTimeFilters: FilterConfig[] = [
     type: "select",
     dataKey: "season",
     options: SEASON_OPTIONS,
-    defaultValue: "2025",
+    defaultValue: "2026",
     row: 1,
   },
   {
@@ -278,7 +279,7 @@ export const rehabFilters: FilterConfig[] = [
     type: "select",
     dataKey: "season",
     options: SEASON_OPTIONS,
-    defaultValue: "2024",
+    defaultValue: "2026",
     row: 1,
   },
   {
@@ -359,7 +360,7 @@ export const injuryDashboardFilters: FilterConfig[] = [
     type: "select",
     dataKey: "season",
     options: SEASON_OPTIONS,
-    defaultValue: "2024",
+    defaultValue: "2026",
     row: 1,
   },
   {

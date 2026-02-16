@@ -134,7 +134,7 @@ function getWeightedSeverity(): "Minor" | "Moderate" | "Severe" {
 function generateInjuryRecords(): InjuryRecord[] {
   const records: InjuryRecord[] = [];
   let recordId = 1;
-  const seasons = [2022, 2023, 2024, 2025];
+  const seasons = [2022, 2023, 2024, 2025, 2026];
 
   // Generate players for each team (roughly 53 per team, but we'll track injuries for about 25-30 per team per season)
   const playersPerTeamPerSeason = 28;

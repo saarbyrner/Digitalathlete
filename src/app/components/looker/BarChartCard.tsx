@@ -38,6 +38,8 @@ export function BarChartCard({
 }: BarChartCardProps) {
   const colors = getChartColorValues();
   const barColor = color || colors.blueLight;
+  // Adjust bottom margin for rotated X-axis tick labels to a normal spacing
+  const chartMargin = { ...defaultMargin, bottom: 50 };
   return (
     <Paper
       sx={{
@@ -66,9 +68,19 @@ export function BarChartCard({
       )}
       <Box sx={{ width: "100%", height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }}>
         <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
-          <BarChart data={data} margin={defaultMargin}>
+          <BarChart data={data} margin={chartMargin}>
             <CartesianGrid {...cartesianGridConfig} />
-            <XAxis dataKey={xAxisKey} {...xAxisConfig} />
+            <XAxis
+              dataKey={xAxisKey}
+              {...xAxisConfig}
+              // Force Recharts to render every tick label (prevents some labels being omitted)
+              interval={0}
+              // Reserve reasonable vertical space for labels and increase distance from axis
+              height={60}
+              tickMargin={12}
+              // Rotation offset so labels sit below the bars without excessive gap
+              tick={{ ...xAxisConfig.tick, angle: -30, dy: 8 }}
+            />
             <YAxis {...yAxisConfig} />
             <Tooltip {...tooltipConfig} />
             <Bar dataKey={dataKey} fill={barColor} radius={barRadius} />
