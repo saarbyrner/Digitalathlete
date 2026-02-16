@@ -70,7 +70,6 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 4,
-    "Acupuncture": 0,
     "Exercise minutes": 40,
   },
   {
