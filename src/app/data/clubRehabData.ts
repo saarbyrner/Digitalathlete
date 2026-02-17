@@ -64,7 +64,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Tue 2 Oct",
@@ -73,7 +73,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 3,
     "Acupuncture": 0,
-    "Exercise minutes": 30,
+    "Exercise count": 3,
   },
   {
     date: "Wed 3 Oct",
@@ -82,7 +82,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 1,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Thu 4 Oct",
@@ -91,7 +91,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 2,
     "Massage": 2,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Fri 5 Oct",
@@ -100,7 +100,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "6 Sat Oct",
@@ -109,7 +109,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 4,
-    "Exercise minutes": 20,
+    "Exercise count": 2,
   },
   {
     date: "Sun 7 Oct",
@@ -118,7 +118,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 25,
+    "Exercise count": 3,
   },
   {
     date: "Mon 8 Oct",
@@ -127,7 +127,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 1,
     "Acupuncture": 0,
-    "Exercise minutes": 10,
+    "Exercise count": 1,
   },
   {
     date: "Tue 9 Oct",
@@ -136,7 +136,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 3,
     "Acupuncture": 0,
-    "Exercise minutes": 30,
+    "Exercise count": 3,
   },
   {
     date: "Wed 10 Oct",
@@ -145,7 +145,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 40,
+    "Exercise count": 4,
   },
   {
     date: "Thu 11 Oct",
@@ -154,7 +154,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 1,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 30,
+    "Exercise count": 3,
   },
   {
     date: "Fri 12 Oct",
@@ -163,7 +163,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 1,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Sat 13 Oct",
@@ -172,7 +172,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 1,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 30,
+    "Exercise count": 3,
   },
   {
     date: "Sun 14 Oct",
@@ -181,7 +181,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 4,
-    "Exercise minutes": 40,
+    "Exercise count": 4,
   },
   {
     date: "Mon 15 Oct",
@@ -190,7 +190,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 10,
+    "Exercise count": 1,
   },
   {
     date: "Tue 16 Oct",
@@ -199,7 +199,7 @@ export const injuryModalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 1,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
 ];
 
@@ -217,15 +217,15 @@ export const playersBySessionTypeData = [
 ];
 
 export const sessionsModalityVsExerciseData = [
-  { player: "Bargas, Jake", "Heat pack": 4, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise minutes": 30 },
-  { player: "Barbora, Jefrin", "Heat pack": 0, "Ultrasound": 3, "Cold Pack": 0, "Massage": 0, "Acupuncture": 0, "Exercise minutes": 10 },
-  { player: "Boone, Ben", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise minutes": 5 },
-  { player: "Borges, Darian", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 2, "Massage": 1, "Acupuncture": 3, "Exercise minutes": 20 },
-  { player: "Josh, Alex", "Heat pack": 4, "Ultrasound": 0, "Cold Pack": 2, "Massage": 2, "Acupuncture": 0, "Exercise minutes": 40 },
-  { player: "Campbell, Tom", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 1, "Massage": 2, "Acupuncture": 0, "Exercise minutes": 25 },
-  { player: "Dean, Max", "Heat pack": 1, "Ultrasound": 0, "Cold Pack": 0, "Massage": 0, "Acupuncture": 0, "Exercise minutes": 15 },
-  { player: "Foley, Ben", "Heat pack": 0, "Ultrasound": 2, "Cold Pack": 0, "Massage": 1, "Acupuncture": 0, "Exercise minutes": 20 },
-  { player: "Gregory, Mark", "Heat pack": 3, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise minutes": 30 },
+  { player: "Bargas, Jake", "Heat pack": 4, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise count": 3 },
+  { player: "Barbora, Jefrin", "Heat pack": 0, "Ultrasound": 3, "Cold Pack": 0, "Massage": 0, "Acupuncture": 0, "Exercise count": 1 },
+  { player: "Boone, Ben", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise count": 1 },
+  { player: "Borges, Darian", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 2, "Massage": 1, "Acupuncture": 3, "Exercise count": 2 },
+  { player: "Josh, Alex", "Heat pack": 4, "Ultrasound": 0, "Cold Pack": 2, "Massage": 2, "Acupuncture": 0, "Exercise count": 4 },
+  { player: "Campbell, Tom", "Heat pack": 0, "Ultrasound": 0, "Cold Pack": 1, "Massage": 2, "Acupuncture": 0, "Exercise count": 3 },
+  { player: "Dean, Max", "Heat pack": 1, "Ultrasound": 0, "Cold Pack": 0, "Massage": 0, "Acupuncture": 0, "Exercise count": 2 },
+  { player: "Foley, Ben", "Heat pack": 0, "Ultrasound": 2, "Cold Pack": 0, "Massage": 1, "Acupuncture": 0, "Exercise count": 2 },
+  { player: "Gregory, Mark", "Heat pack": 3, "Ultrasound": 0, "Cold Pack": 1, "Massage": 0, "Acupuncture": 0, "Exercise count": 3 },
 ];
 
 export const sessionsExerciseData = [

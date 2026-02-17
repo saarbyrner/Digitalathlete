@@ -189,7 +189,7 @@ export function DashboardPage() {
 
   // Selected player profile for Player tab
   const selectedPlayerProfile = useMemo(() => {
-    if (dashboardType !== "rehab" || selectedTab !== 0) return null;
+    if (dashboardType !== "rehab" || selectedTab !== 2) return null;
     
     const playerName = lookerFilterValues.playerName as string;
     if (playerName) {
@@ -212,7 +212,7 @@ export function DashboardPage() {
 
   // Player-specific sessions for Player tab charts
   const playerSessionData = useMemo(() => {
-    if (dashboardType !== "rehab" || selectedTab !== 0) return null;
+    if (dashboardType !== "rehab" || selectedTab !== 2) return null;
     
     const playerName = lookerFilterValues.playerName as string;
     
@@ -383,7 +383,7 @@ export function DashboardPage() {
 
   const tabChartConfig = useMemo(() => {
     // Default view is by injury type (seasonal lens)
-    if (selectedTab === 0) {
+    if (selectedTab === 2) {
       const chartTitle = benchmarkData
         ? `${filterState?.season || "Current"} Season vs 3-Year Average`
         : "Injury Distribution by Type";
@@ -549,7 +549,7 @@ export function DashboardPage() {
                   }}
                 >
                   {(dashboardType === "rehab"
-                    ? ["Player", "Sessions", "Club", "Injury", "League"]
+                    ? ["Club", "Sessions", "Player", "Injury", "League"]
                     : ["Season", "Position", "Team"]
                   ).map((label, index) => (
                     <Tab key={label} label={label} />
@@ -641,7 +641,7 @@ export function DashboardPage() {
               
               {/* Conditionally render Rehab Dashboard, Missed Time Dashboard or Default Dashboard */}
               {dashboardType === "rehab" && rehabChartData ? (
-                selectedTab === 0 ? (
+                selectedTab === 2 ? (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
                     {/* Player Profile Section with Metric Cards */}
                     <Grid container spacing={3} alignItems="stretch">
@@ -717,19 +717,19 @@ export function DashboardPage() {
                       <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
                         {/* Modality vs Exercise Chart */}
                         <ComposedBarLineChartCard
-                          title="Modality vs Exercise"
+                          title="Modality Usage vs Exercise Count Over Time"
                           data={playerSessionData.modalityByDate}
                           barDataKeys={["Heat pack", "Ultrasound", "Cold Pack", "Massage", "Acupuncture"]}
-                          lineDataKeys={["Exercise minutes"]}
+                          lineDataKeys={["Exercise count"]}
                           xAxisKey="date"
                           height={350}
                           yAxisLabel="Load score"
-                          rightYAxisLabel="Exercise mins"
+                          rightYAxisLabel="Exercise count"
                         />
 
                         {/* Exercises Chart */}
                         <StackedBarChartCard
-                          title="Exercises"
+                          title="Exercise Progression Over Time"
                           data={playerSessionData.exercisesByDate}
                           dataKeys={["Front squat", "Push-ups", "OH dumbbell press", "Plank", "Romanian deadlifts"]}
                           xAxisKey="date"
@@ -738,7 +738,7 @@ export function DashboardPage() {
 
                         {/* Body Part Chart */}
                         <StackedBarChartCard
-                          title="Body part"
+                          title="Body Parts Treated Over Time"
                           data={playerSessionData.bodyPartsByDate}
                           dataKeys={playerSessionData.bodyPartKeys.length > 0 ? playerSessionData.bodyPartKeys : ["Ankle", "Knee", "Shoulder", "Neck", "Groin"]}
                           xAxisKey="date"
@@ -756,7 +756,7 @@ export function DashboardPage() {
                     {/* Players by session type Table */}
                     <Paper sx={{ padding: "var(--spacing-4)" }}>
                       <Typography variant="h6" sx={{ mb: 2 }}>
-                        Players by session type
+                        Session Count by Player
                       </Typography>
                       <TableContainer>
                         <Table>
@@ -826,19 +826,19 @@ export function DashboardPage() {
 
                     {/* Modality vs Exercise Chart */}
                     <ComposedBarLineChartCard
-                      title="Modality vs Exercise"
+                      title="Modality Usage vs Exercise Count by Player"
                       data={rehabChartData.modalityByPlayer}
                       barDataKeys={["Heat pack", "Ultrasound", "Cold Pack", "Massage", "Acupuncture"]}
-                      lineDataKeys={["Exercise minutes"]}
+                      lineDataKeys={["Exercise count"]}
                       xAxisKey="player"
                       height={350}
                       yAxisLabel="Modality count"
-                      rightYAxisLabel="Exercise mins"
+                      rightYAxisLabel="Exercise count"
                     />
 
                     {/* Exercises Chart */}
                     <StackedBarChartCard
-                      title="Exercises"
+                      title="Exercise Distribution by Player"
                       data={rehabChartData.exercisesByPlayer}
                       dataKeys={["Front squat", "Push-ups", "OH dumbbell press", "Plank", "Romanian deadlifts"]}
                       xAxisKey="player"
@@ -847,14 +847,14 @@ export function DashboardPage() {
 
                     {/* Body Part Chart */}
                     <StackedBarChartCard
-                      title="Body part"
+                      title="Body Parts Treated by Player"
                       data={rehabChartData.bodyPartsByPlayer}
                       dataKeys={rehabChartData.bodyPartKeys.length > 0 ? rehabChartData.bodyPartKeys : ["Ankle", "Knee", "Shoulder", "Neck", "Groin"]}
                       xAxisKey="player"
                       height={350}
                     />
                   </Box>
-                ) : selectedTab === 2 ? (
+                ) : selectedTab === 0 ? (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
                     {/* Three Donut Charts Row */}
                     <Grid container spacing={3}>
@@ -883,7 +883,7 @@ export function DashboardPage() {
 
                     {/* Days lost x Injuries Bar Chart */}
                     <BarChartCard
-                      title="Days lost x Injuries"
+                      title="Total Days Lost by Injury Type"
                       data={rehabChartData.daysLostByInjury}
                       dataKey="days"
                       xAxisKey="injury"
@@ -894,7 +894,7 @@ export function DashboardPage() {
                     {/* Days lost x Maintenance / Rehab x Player Table */}
                     <Paper sx={{ padding: "var(--spacing-4)" }}>
                       <Typography variant="h6" sx={{ mb: 2 }}>
-                        Days lost x Maintenance / Rehab x Player
+                        Session Count Analysis - Rehab vs Maintenance by Player
                       </Typography>
                       <TableContainer>
                         <Table>
@@ -902,16 +902,16 @@ export function DashboardPage() {
                             <TableRow>
                               <TableCell></TableCell>
                               <TableCell>Player</TableCell>
-                              <TableCell>Rehab days</TableCell>
-                              <TableCell>Maintenance days</TableCell>
+                              <TableCell>Rehab sessions</TableCell>
+                              <TableCell>Maintenance sessions</TableCell>
                               <TableCell align="right">Total</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {rehabChartData.daysLostByPlayer.map((row, index) => {
-                              const maxValue = Math.max(...rehabChartData.daysLostByPlayer.map(r => Math.max(r["Rehab days"], r["Maintenance days"])));
-                              const rehabWidth = maxValue > 0 ? (row["Rehab days"] / maxValue) * 100 : 0;
-                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance days"] / maxValue) * 100 : 0;
+                              const maxValue = Math.max(...rehabChartData.daysLostByPlayer.map(r => Math.max(r["Rehab sessions"], r["Maintenance sessions"])));
+                              const rehabWidth = maxValue > 0 ? (row["Rehab sessions"] / maxValue) * 100 : 0;
+                              const maintenanceWidth = maxValue > 0 ? (row["Maintenance sessions"] / maxValue) * 100 : 0;
                               
                               return (
                                 <TableRow key={index}>
@@ -924,7 +924,7 @@ export function DashboardPage() {
                                           width: `${rehabWidth}%`,
                                           minWidth: "40px",
                                           height: "24px",
-                                          backgroundColor: row["Rehab days"] === maxValue ? "var(--chart-blue-dark)" : "var(--chart-1)",
+                                          backgroundColor: row["Rehab sessions"] === maxValue ? "var(--chart-blue-dark)" : "var(--chart-1)",
                                           borderRadius: "2px",
                                           display: "flex",
                                           alignItems: "center",
@@ -932,7 +932,7 @@ export function DashboardPage() {
                                           paddingRight: "8px",
                                         }}
                                       />
-                                      <Typography variant="body2">{row["Rehab days"]}</Typography>
+                                      <Typography variant="body2">{row["Rehab sessions"]}</Typography>
                                     </Box>
                                   </TableCell>
                                   <TableCell>
@@ -942,7 +942,7 @@ export function DashboardPage() {
                                           width: `${maintenanceWidth}%`,
                                           minWidth: "40px",
                                           height: "24px",
-                                          backgroundColor: row["Maintenance days"] === maxValue ? "#E31B54" : "#FF5B8C",
+                                          backgroundColor: row["Maintenance sessions"] === maxValue ? "#E31B54" : "#FF5B8C",
                                           borderRadius: "2px",
                                           display: "flex",
                                           alignItems: "center",
@@ -950,7 +950,7 @@ export function DashboardPage() {
                                           paddingRight: "8px",
                                         }}
                                       />
-                                      <Typography variant="body2">{row["Maintenance days"]}</Typography>
+                                      <Typography variant="body2">{row["Maintenance sessions"]}</Typography>
                                     </Box>
                                   </TableCell>
                                   <TableCell align="right">{row.total}</TableCell>
@@ -966,7 +966,7 @@ export function DashboardPage() {
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
                     {/* Injuries by session type Chart */}
                     <GroupedBarChartCard
-                      title="Injuries by session type"
+                      title="Session Type Comparison by Injury Category"
                       data={rehabChartData.injuriesBySessionType}
                       dataKeys={["Rehab sessions", "Maintenance sessions"]}
                       xAxisKey="Injury category"
@@ -976,7 +976,7 @@ export function DashboardPage() {
                     {/* Injuries by session type Table */}
                     <Paper sx={{ padding: "var(--spacing-4)" }}>
                       <Typography variant="h6" sx={{ mb: 2 }}>
-                        Injuries by session type
+                        Detailed Session Count by Injury Category
                       </Typography>
                       <TableContainer>
                         <Table>
@@ -1049,18 +1049,18 @@ export function DashboardPage() {
                       title="Modality vs Exercise by Injury Type"
                       data={rehabChartData.modalityByInjury}
                       barDataKeys={["Heat pack", "Ultrasound", "Cold Pack", "Massage", "Acupuncture"]}
-                      lineDataKeys={["Exercise minutes"]}
+                      lineDataKeys={["Exercise count"]}
                       xAxisKey="injury"
                       height={350}
                       yAxisLabel="Modality count"
-                      rightYAxisLabel="Exercise mins"
+                      rightYAxisLabel="Exercise count"
                     />
                   </Box>
                 ) : selectedTab === 4 ? (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
                     {/* Team Sessions Comparison */}
                     <GroupedBarChartCard
-                      title="Sessions by Team"
+                      title="League-Wide Session Comparison by Team"
                       data={rehabChartData.sessionsByTeam}
                       dataKeys={["Rehab sessions", "Maintenance sessions"]}
                       xAxisKey="team"
@@ -1070,7 +1070,7 @@ export function DashboardPage() {
                     {/* Team Injury Type Distribution */}
                     <Paper sx={{ padding: "var(--spacing-4)" }}>
                       <Typography variant="h6" sx={{ mb: 2 }}>
-                        Injury Types by Team
+                        Team Performance Metrics
                       </Typography>
                       <TableContainer>
                         <Table>
@@ -1123,8 +1123,8 @@ export function DashboardPage() {
                   </Box>
                 ) : null
               ) : dashboardType === "missed-time" && missedTimeData ? (
-                // Render different content per selected tab: Season (0), Position (1), Team (2)
-                selectedTab === 0 ? (
+                // Render different content per selected tab: Season (2), Position (1), Team (0)
+                selectedTab === 2 ? (
                   <Grid container spacing={2} sx={{ width: "100%", minWidth: 0 }}>
                     {/* Horizontal Bar Chart */}
                     <Grid size={{ xs: 12, md: 8 }} sx={{ minWidth: 0 }}>
@@ -1293,7 +1293,7 @@ export function DashboardPage() {
               ) : (
                 <Grid container spacing={2} sx={{ width: "100%", minWidth: 0 }}>
                   {/* Season view (default) */}
-                  {selectedTab === 0 && (
+                  {selectedTab === 2 && (
                     <>
                       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }} sx={{ minWidth: 0 }}>
                         <MetricCard
@@ -1346,7 +1346,7 @@ export function DashboardPage() {
                   )}
 
                   {/* Team view */}
-                  {selectedTab === 2 && (
+                  {selectedTab === 0 && (
                     <Grid size={{ xs: 12 }} sx={{ minWidth: 0 }}>
                       <GroupedHorizontalBarChartCard
                         title="Injuries by Team"

@@ -25,7 +25,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 1,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Tue 13 Oct",
@@ -34,7 +34,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 3,
     "Acupuncture": 0,
-    "Exercise minutes": 10,
+    "Exercise count": 1,
   },
   {
     date: "Wed 14 Oct",
@@ -43,7 +43,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0.5,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 5,
+    "Exercise count": 1,
   },
   {
     date: "Thu 15 Oct",
@@ -52,7 +52,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 2,
     "Massage": 2,
     "Acupuncture": 0,
-    "Exercise minutes": 10,
+    "Exercise count": 1,
   },
   {
     date: "Fri 16 Oct",
@@ -61,7 +61,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Sun 18 Oct",
@@ -70,7 +70,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 4,
-    "Exercise minutes": 40,
+    "Exercise count": 4,
   },
   {
     date: "Tue 20 Oct",
@@ -79,7 +79,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Mon 26 Oct",
@@ -88,7 +88,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 1,
     "Acupuncture": 0,
-    "Exercise minutes": 25,
+    "Exercise count": 3,
   },
   {
     date: "Wed 28 Oct",
@@ -97,7 +97,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Thu 29 Oct",
@@ -106,7 +106,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 30,
+    "Exercise count": 3,
   },
   {
     date: "Fri 30 Oct",
@@ -115,7 +115,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 3,
     "Acupuncture": 0,
-    "Exercise minutes": 20,
+    "Exercise count": 2,
   },
   {
     date: "Sat 31 Oct",
@@ -124,7 +124,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 3,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
   {
     date: "Sun 1 Nov",
@@ -133,7 +133,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 3,
-    "Exercise minutes": 15,
+    "Exercise count": 2,
   },
   {
     date: "Mon 2 Nov",
@@ -142,7 +142,7 @@ export const modalityVsExerciseData = [
     "Cold Pack": 0,
     "Massage": 0,
     "Acupuncture": 0,
-    "Exercise minutes": 0,
+    "Exercise count": 0,
   },
 ];
 

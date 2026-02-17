@@ -41,7 +41,7 @@ export interface RehabSession {
   modalities: RehabModalities;
   exercises: RehabExercises;
   bodyPartsWorked: string[];
-  exerciseMinutes: number;
+  exerciseCount: number;
   status: string; // From injury record
   mechanismOfInjury: string; // From injury record
   week: number; // NFL week (0=preseason, 1-18=regular, 19+=postseason)
@@ -303,9 +303,9 @@ function generateSession(
     romanianDeadlifts: generateWeightedValue(exerciseWeights.romanianDeadlifts * exerciseMultiplier, 6),
   };
 
-  // Calculate exercise minutes based on total exercise count
+  // Calculate exercise count based on total exercise count (use actual count)
   const totalExercises = Object.values(exercises).reduce((sum, val) => sum + val, 0);
-  const exerciseMinutes = totalExercises * (5 + Math.floor(Math.random() * 10));
+  const exerciseCount = totalExercises;
 
   // Get body parts worked in this session
   const relatedParts = getRelatedBodyParts(bodyPart);
@@ -328,7 +328,7 @@ function generateSession(
     modalities,
     exercises,
     bodyPartsWorked,
-    exerciseMinutes,
+    exerciseCount,
     status: injury.status,
     mechanismOfInjury: injury.mechanismOfInjury || "Unknown",
     week: calculateWeek(sessionDate, injury.season),
@@ -409,7 +409,7 @@ export interface ModalityVsExercisePoint {
   "Cold Pack": number;
   Massage: number;
   Acupuncture: number;
-  "Exercise minutes": number;
+  "Exercise count": number;
 }
 
 export interface ExerciseDataPoint {
@@ -601,7 +601,7 @@ export function aggregateModalityVsExercise(
         "Cold Pack": 0,
         Massage: 0,
         Acupuncture: 0,
-        "Exercise minutes": 0,
+        "Exercise count": 0,
       } as ModalityVsExercisePoint;
     }
 
@@ -610,7 +610,8 @@ export function aggregateModalityVsExercise(
     grouped[key]["Cold Pack"] += session.modalities.coldPack;
     grouped[key]["Massage"] += session.modalities.massage;
     grouped[key]["Acupuncture"] += session.modalities.acupuncture;
-    grouped[key]["Exercise minutes"] += session.exerciseMinutes;
+    const sessionExerciseCount = Object.values(session.exercises).reduce((sum, val) => sum + val, 0);
+    grouped[key]["Exercise count"] += sessionExerciseCount;
   });
 
   const result = Object.values(grouped);
