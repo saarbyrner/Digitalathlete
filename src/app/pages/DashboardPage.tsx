@@ -147,7 +147,19 @@ export function DashboardPage() {
       }
     });
     
-    // Only update if we actually removed some filters
+    // For PHS Player Summary tab, auto-select first player if none is selected
+    if (dashboardType === "phs-injury-report" && selectedTab === 2) {
+      if (!newFilterValues.playerName && !lookerFilterValues.playerName) {
+        // Get unique players from the data
+        const uniquePlayers = Array.from(new Set(INJURY_RECORDS.map(r => r.playerName))).sort();
+        if (uniquePlayers.length > 0) {
+          newFilterValues.playerName = uniquePlayers[0];
+          needsUpdate = true;
+        }
+      }
+    }
+    
+    // Only update if we actually removed some filters or added default player
     if (needsUpdate) {
       setLookerFilterValues(newFilterValues);
     }
@@ -351,17 +363,23 @@ export function DashboardPage() {
         case "game":
           filtered = filtered.filter(r => r.game?.toLowerCase().includes((value as string).toLowerCase()));
           break;
+        case "gameweeks":
+          // Multi-select filter: value is an array
+          if (Array.isArray(value) && value.length > 0) {
+            filtered = filtered.filter(r => value.includes(r.gameweek));
+          }
+          break;
         case "mechanismOfInjury":
-          filtered = filtered.filter(r => r.mechanismOfInjury?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.mechanismOfInjury === value);
           break;
         case "season":
           filtered = filtered.filter(r => r.season === parseInt(value as string));
           break;
         case "contactTypeCategory":
-          filtered = filtered.filter(r => r.contactTypeCategory?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.contactTypeCategory === value);
           break;
         case "seasonType":
-          filtered = filtered.filter(r => r.seasonType?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.seasonType === value);
           break;
         case "week":
           filtered = filtered.filter(r => r.week === parseInt(value as string));
@@ -376,7 +394,7 @@ export function DashboardPage() {
           filtered = filtered.filter(r => r.injuryType === value);
           break;
         case "bodyPart":
-          filtered = filtered.filter(r => r.bodyPart?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.bodyPart === value);
           break;
         case "positionAtTimeOfInjury":
           filtered = filtered.filter(r => r.positionAtTimeOfInjury === value);
@@ -385,10 +403,10 @@ export function DashboardPage() {
           filtered = filtered.filter(r => r.rosterPosition === value);
           break;
         case "currentRosterStatus":
-          filtered = filtered.filter(r => r.currentRosterStatus?.toLowerCase().replace(/\s+/g, '-') === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.currentRosterStatus === value);
           break;
         case "teamActivity":
-          filtered = filtered.filter(r => r.teamActivity?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.teamActivity === value);
           break;
         case "missedTimeInjury":
           if (value === true) filtered = filtered.filter(r => r.missedTimeInjury === true);
@@ -409,6 +427,20 @@ export function DashboardPage() {
   }, [dashboardType, lookerFilterValues]);
 
   // Filtered data for Activity Log (PHS Activity Report tab)
+  // Ensure the Player Summary tab has a default selected player so the UI shows the selection
+  useEffect(() => {
+    if (dashboardType !== "phs-injury-report" || selectedTab !== 2) return;
+
+    // If a player is already selected, do nothing
+    if ((lookerFilterValues as any).playerName) return;
+
+    // Derive first available player from the currently filtered PHS data
+    const uniquePlayers = Array.from(new Set(filteredPhsData.map((r) => r.playerName))).sort();
+    if (uniquePlayers.length > 0) {
+      setLookerFilterValues((prev) => ({ ...prev, playerName: uniquePlayers[0] }));
+    }
+  }, [dashboardType, selectedTab, filteredPhsData, lookerFilterValues.playerName]);
+
   const filteredActivityLogData = useMemo(() => {
     if (dashboardType !== "phs-injury-report" || selectedTab !== 1) return [];
     
@@ -423,17 +455,23 @@ export function DashboardPage() {
         case "game":
           filtered = filtered.filter(r => r.game?.toLowerCase().includes((value as string).toLowerCase()));
           break;
+        case "gameweeks":
+          // Multi-select filter: value is an array
+          if (Array.isArray(value) && value.length > 0) {
+            filtered = filtered.filter(r => value.includes(r.gameweek));
+          }
+          break;
         case "mechanismOfInjury":
-          filtered = filtered.filter(r => r.mechanismOfInjury?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.mechanismOfInjury === value);
           break;
         case "season":
           filtered = filtered.filter(r => r.season === parseInt(value as string));
           break;
         case "contactTypeCategory":
-          filtered = filtered.filter(r => r.contactTypeCategory?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.contactTypeCategory === value);
           break;
         case "seasonType":
-          filtered = filtered.filter(r => r.seasonType?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.seasonType === value);
           break;
         case "week":
           filtered = filtered.filter(r => r.week === parseInt(value as string));
@@ -448,7 +486,7 @@ export function DashboardPage() {
           filtered = filtered.filter(r => r.injuryType === value);
           break;
         case "bodyPart":
-          filtered = filtered.filter(r => r.bodyPart?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.bodyPart === value);
           break;
         case "positionAtTimeOfInjury":
           filtered = filtered.filter(r => r.positionAtTimeOfInjury === value);
@@ -457,10 +495,10 @@ export function DashboardPage() {
           filtered = filtered.filter(r => r.rosterPosition === value);
           break;
         case "currentRosterStatus":
-          filtered = filtered.filter(r => r.currentRosterStatus?.toLowerCase().replace(/\s+/g, '-') === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.currentRosterStatus === value);
           break;
         case "teamActivity":
-          filtered = filtered.filter(r => r.teamActivity?.toLowerCase() === (value as string).toLowerCase());
+          filtered = filtered.filter(r => r.teamActivity === value);
           break;
         case "missedTimeInjury":
           if (value === true) filtered = filtered.filter(r => r.missedTimeInjury === true);
@@ -613,9 +651,17 @@ export function DashboardPage() {
   const playerSummaryChartData = useMemo(() => {
     if (dashboardType !== "phs-injury-report" || selectedTab !== 2) return null;
     
-    const selectedPlayer = lookerFilterValues.playerName as string;
+    let selectedPlayer = lookerFilterValues.playerName as string;
     
-    // If no player is selected, return null
+    // If no player is selected, get the first available player from filtered data
+    if (!selectedPlayer && filteredPhsData.length > 0) {
+      const uniquePlayers = Array.from(new Set(filteredPhsData.map(r => r.playerName))).sort();
+      if (uniquePlayers.length > 0) {
+        selectedPlayer = uniquePlayers[0];
+      }
+    }
+    
+    // If still no player available, return null
     if (!selectedPlayer) {
       return null;
     }

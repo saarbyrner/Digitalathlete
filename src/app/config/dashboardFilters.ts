@@ -28,17 +28,18 @@ const WEEK_TYPE_OPTIONS = [
 ];
 
 const SEASON_TYPE_OPTIONS = [
-  { value: "regular", label: "Regular" },
-  { value: "preseason", label: "Pre-season" },
-  { value: "postseason", label: "Post-season" },
+  { value: "Regular", label: "Regular" },
+  { value: "Pre-season", label: "Pre-season" },
+  { value: "Post-season", label: "Post-season" },
+  { value: "Off-season", label: "Off-season" },
 ];
 
 const TEAM_ACTIVITY_OPTIONS = [
-  { value: "game", label: "Game" },
-  { value: "practice", label: "Practice" },
-  { value: "conditioning", label: "Conditioning" },
-  { value: "training", label: "Training" },
-  { value: "walkthrough", label: "Walkthrough" },
+  { value: "Game", label: "Game" },
+  { value: "Practice", label: "Practice" },
+  { value: "Conditioning", label: "Conditioning" },
+  { value: "Training", label: "Training" },
+  { value: "Walkthrough", label: "Walkthrough" },
 ];
 
 const MECHANISM_OF_INJURY_OPTIONS = [
@@ -56,20 +57,21 @@ const CONTACT_TYPE_OPTIONS = [
 ];
 
 const BODY_PART_OPTIONS = [
-  { value: "head", label: "Head" },
-  { value: "neck", label: "Neck" },
-  { value: "shoulder", label: "Shoulder" },
-  { value: "elbow", label: "Elbow" },
-  { value: "wrist", label: "Wrist" },
-  { value: "hand", label: "Hand" },
-  { value: "back", label: "Back" },
-  { value: "hip", label: "Hip" },
-  { value: "groin", label: "Groin" },
-  { value: "quad", label: "Quad" },
-  { value: "hamstring", label: "Hamstring" },
-  { value: "knee", label: "Knee" },
-  { value: "ankle", label: "Ankle" },
-  { value: "foot", label: "Foot" },
+  { value: "Head", label: "Head" },
+  { value: "Neck", label: "Neck" },
+  { value: "Shoulder", label: "Shoulder" },
+  { value: "Arm", label: "Arm" },
+  { value: "Elbow", label: "Elbow" },
+  { value: "Wrist", label: "Wrist" },
+  { value: "Hand", label: "Hand" },
+  { value: "Back", label: "Back" },
+  { value: "Hip", label: "Hip" },
+  { value: "Groin", label: "Groin" },
+  { value: "Quad", label: "Quad" },
+  { value: "Hamstring", label: "Hamstring" },
+  { value: "Knee", label: "Knee" },
+  { value: "Ankle", label: "Ankle" },
+  { value: "Foot", label: "Foot" },
 ];
 
 const POSITION_OPTIONS = [
@@ -100,12 +102,12 @@ const INJURY_TYPE_OPTIONS = [
 ];
 
 const ROSTER_STATUS_OPTIONS = [
-  { value: "active", label: "Active" },
-  { value: "injured-reserve", label: "Injured Reserve" },
-  { value: "practice-squad", label: "Practice Squad" },
-  { value: "pup", label: "Physically Unable to Perform" },
-  { value: "nfi", label: "Non-Football Injury" },
-  { value: "released", label: "Released" },
+  { value: "Active", label: "Active" },
+  { value: "Injured Reserve", label: "Injured Reserve" },
+  { value: "Practice Squad", label: "Practice Squad" },
+  { value: "Physically Unable to Perform", label: "Physically Unable to Perform" },
+  { value: "Non-Football Injury", label: "Non-Football Injury" },
+  { value: "Released", label: "Released" },
 ];
 
 const WEEK_OPTIONS = Array.from({ length: 18 }, (_, i) => ({

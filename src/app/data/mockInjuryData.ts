@@ -99,6 +99,65 @@ const injuryRecoveryProfiles: Record<InjuryType, { minDays: number; maxDays: num
   "Groin": { minDays: 14, maxDays: 60, severityWeight: { Minor: 21, Moderate: 35, Severe: 50 } },
 };
 
+// Injury type to body part mapping (for realistic data)
+const injuryTypeToBodyPart: Record<InjuryType, string[]> = {
+  "Concussion": ["Head"],
+  "Shoulder": ["Shoulder"],
+  "LEX Sprain": ["Ankle", "Knee"],
+  "LEX Strain": ["Hamstring", "Quad", "Groin"],
+  "ACL": ["Knee"],
+  "Hamstring": ["Hamstring"],
+  "Ankle": ["Ankle"],
+  "High Ankle Sprain": ["Ankle"],
+  "Lateral Ankle Sprain": ["Ankle"],
+  "Knee": ["Knee"],
+  "Back": ["Back"],
+  "Foot": ["Foot"],
+  "Hand": ["Hand", "Wrist"],
+  "Quad": ["Quad"],
+  "Hip": ["Hip"],
+  "Groin": ["Groin"],
+};
+
+// Injury type to clinical impression mapping (for realistic data)
+const injuryTypeToClinicalImpression: Record<InjuryType, string[]> = {
+  "Concussion": ["Concussion", "Knee Concussion"],
+  "Shoulder": ["Shoulder Strain", "Shoulder Fracture", "Shoulder Dislocation"],
+  "LEX Sprain": ["Ankle Sprain", "MCL Sprain", "Knee Sprain"],
+  "LEX Strain": ["Hamstring Strain", "Lower Back Strain", "Hip Flexor Strain"],
+  "ACL": ["ACL Tear Anterior", "ACL Sprain"],
+  "Hamstring": ["Hamstring Strain", "Hamstring Pull"],
+  "Ankle": ["Ankle Sprain", "Ankle Fracture"],
+  "High Ankle Sprain": ["Ankle Sprain", "High Ankle Sprain"],
+  "Lateral Ankle Sprain": ["Ankle Sprain", "Lateral Ankle Sprain"],
+  "Knee": ["Knee Concussion", "MCL Sprain", "Knee Strain"],
+  "Back": ["Lower Back Strain", "Back Sprain"],
+  "Foot": ["Foot Fracture", "Foot Sprain"],
+  "Hand": ["Hand Fracture", "Wrist Sprain", "Elbow Abrasion"],
+  "Quad": ["Quad Contusion", "Quad Strain"],
+  "Hip": ["Hip Flexor Strain", "Hip Contusion"],
+  "Groin": ["Groin Strain", "Groin Pull"],
+};
+
+// Body part to side mapping (for realistic side assignment)
+const bodyPartToSideOptions: Record<string, ("Left" | "Right" | "Midline" | "Head")[]> = {
+  "Head": ["Head"],
+  "Neck": ["Midline"],
+  "Shoulder": ["Left", "Right"],
+  "Arm": ["Left", "Right"],
+  "Elbow": ["Left", "Right"],
+  "Wrist": ["Left", "Right"],
+  "Hand": ["Left", "Right"],
+  "Back": ["Midline"],
+  "Hip": ["Left", "Right"],
+  "Groin": ["Midline"],
+  "Quad": ["Left", "Right"],
+  "Hamstring": ["Left", "Right"],
+  "Knee": ["Left", "Right"],
+  "Ankle": ["Left", "Right"],
+  "Foot": ["Left", "Right"],
+};
+
 // First names pool
 const firstNames = [
   "Marcus", "Jamal", "Tyler", "Brandon", "Cameron", "Derek", "Justin", "Kyle", "Ryan", "Aaron",
@@ -257,16 +316,31 @@ function generateInjuryRecords(): InjuryRecord[] {
         const seasonType = getRandomItem(seasonTypes);
         const teamActivity = sessionTypeAtInjury === "Games" ? "Game" : sessionTypeAtInjury === "Practice" ? "Practice" : (sessionTypeAtInjury === "Conditioning" ? "Conditioning" : "Training");
         const missedTimeInjury = daysOut > 3;
-        const missedGameInjury = sessionTypeAtInjury === "Games" && daysOut > 0;
-        const missedPracticeInjury = sessionTypeAtInjury === "Practice" && daysOut > 0;
-        const bodyPart = getRandomItem(bodyParts);
-        const positionAtTimeOfInjury = getRandomItem(POSITIONS);
+        
+        // More realistic missed games/practices based on severity and daysOut
+        const missedGameInjury = daysOut >= 7; // Typically miss games if out a week or more
+        const missedPracticeInjury = daysOut >= 1; // Miss practice if out at least 1 day
+        
+        // Use realistic body part based on injury type
+        const bodyPartOptions = injuryTypeToBodyPart[injuryType];
+        const bodyPart = getRandomItem(bodyPartOptions);
+        
+        // Position at time of injury should match actual position (only rarely changes)
+        const positionAtTimeOfInjury = Math.random() < 0.95 ? position : getRandomItem(POSITIONS);
+        
         const participationReason = getRandomItem(participationReasons);
         const isPastPlayer = Math.random() < 0.12; // ~12% are past players
         const currentRosterStatus = status === "Recovered" ? (Math.random() < 0.9 ? "Active" : "Practice Squad") : 
                                      (status === "Out" && daysOut > 21 ? "Injured Reserve" : "Active");
-        const side = getRandomItem(sides);
-        const clinicalImpression = getRandomItem(clinicalImpressions);
+        
+        // Use realistic side based on body part
+        const sideOptions = bodyPartToSideOptions[bodyPart] || ["Left", "Right"];
+        const side = getRandomItem(sideOptions);
+        
+        // Use realistic clinical impression based on injury type
+        const clinicalImpressionOptions = injuryTypeToClinicalImpression[injuryType];
+        const clinicalImpression = getRandomItem(clinicalImpressionOptions);
+        
         const missedGames = Math.floor(daysOut / 7); // Roughly 1 game per week
 
         records.push({
@@ -342,6 +416,7 @@ export interface ActivityLogEntry {
   teamName: string;
   teamAbbr: string;
   // Include filter fields from parent injury
+  gameweek?: string;
   game?: string;
   selectGame?: string;
   mechanismOfInjury?: string;
@@ -399,6 +474,7 @@ function generateActivityLogFromInjuries(): ActivityLogEntry[] {
         teamName: injury.teamName,
         teamAbbr: injury.teamAbbr,
         // Include filter fields
+        gameweek: injury.gameweek,
         game: injury.game,
         selectGame: injury.selectGame,
         mechanismOfInjury: injury.mechanismOfInjury,
@@ -443,6 +519,7 @@ function generateActivityLogFromInjuries(): ActivityLogEntry[] {
           teamName: injury.teamName,
           teamAbbr: injury.teamAbbr,
           // Include filter fields
+          gameweek: injury.gameweek,
           game: injury.game,
           selectGame: injury.selectGame,
           mechanismOfInjury: injury.mechanismOfInjury,
