@@ -99,6 +99,21 @@ const INJURY_TYPE_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
+const ROSTER_STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "injured-reserve", label: "Injured Reserve" },
+  { value: "practice-squad", label: "Practice Squad" },
+  { value: "pup", label: "Physically Unable to Perform" },
+  { value: "nfi", label: "Non-Football Injury" },
+  { value: "released", label: "Released" },
+];
+
+const WEEK_OPTIONS = Array.from({ length: 18 }, (_, i) => ({
+  value: String(i + 1),
+  label: `Week ${i + 1}`,
+}));
+
+
 // ==========================================
 // MISSED TIME DASHBOARD FILTERS
 // ==========================================
@@ -656,6 +671,432 @@ export const injuryDashboardFilters: FilterConfig[] = [
 ];
 
 // ==========================================
+// PHS INJURY REPORT DASHBOARD FILTERS
+// ==========================================
+
+export const phsInjuryTabFilters: FilterConfig[] = [
+  // Row 1
+  {
+    id: "selectGame",
+    label: "Select Game",
+    type: "select",
+    dataKey: "selectGame",
+    optionsFromData: "game",
+    placeholder: "All",
+    row: 1,
+    width: "200px",
+  },
+  {
+    id: "mechanismOfInjury",
+    label: "Mechanism of Injury",
+    type: "select",
+    dataKey: "mechanismOfInjury",
+    options: MECHANISM_OF_INJURY_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "season",
+    label: "Season",
+    type: "select",
+    dataKey: "season",
+    options: SEASON_OPTIONS,
+    defaultValue: "2025",
+    row: 1,
+  },
+  {
+    id: "contactTypeCategory",
+    label: "Contact Type Category",
+    type: "select",
+    dataKey: "contactTypeCategory",
+    options: CONTACT_TYPE_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "seasonType",
+    label: "Season Type",
+    type: "select",
+    dataKey: "seasonType",
+    options: SEASON_TYPE_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "week",
+    label: "Week",
+    type: "select",
+    dataKey: "week",
+    options: WEEK_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  // Row 2
+  {
+    id: "club",
+    label: "Club",
+    type: "select",
+    dataKey: "teamAbbr",
+    optionsFromData: "teamAbbr",
+    placeholder: "All",
+    row: 2,
+    width: "180px",
+  },
+  {
+    id: "player",
+    label: "Player",
+    type: "select",
+    dataKey: "playerName",
+    optionsFromData: "playerName",
+    placeholder: "All",
+    row: 2,
+    width: "200px",
+  },
+  {
+    id: "injuryType",
+    label: "Injury Type",
+    type: "select",
+    dataKey: "injuryType",
+    optionsFromData: "injuryType",
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "bodyPart",
+    label: "Body Part",
+    type: "select",
+    dataKey: "bodyPart",
+    options: BODY_PART_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "positionAtTimeOfInjury",
+    label: "Position at Time of Injury",
+    type: "select",
+    dataKey: "positionAtTimeOfInjury",
+    options: POSITION_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  // Row 3
+  {
+    id: "rosterPosition",
+    label: "Roster Position",
+    type: "select",
+    dataKey: "rosterPosition",
+    options: POSITION_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "currentRosterStatus",
+    label: "Current Roster Status",
+    type: "select",
+    dataKey: "currentRosterStatus",
+    options: ROSTER_STATUS_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "teamActivity",
+    label: "Team Activity",
+    type: "select",
+    dataKey: "teamActivity",
+    options: TEAM_ACTIVITY_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "missedTimeInjury",
+    label: "Missed Time Injury",
+    type: "boolean",
+    dataKey: "missedTimeInjury",
+    defaultValue: true,
+    row: 3,
+  },
+  {
+    id: "missedGameInjury",
+    label: "Missed Game Injury",
+    type: "boolean",
+    dataKey: "missedGameInjury",
+    row: 3,
+  },
+  {
+    id: "missedPracticeInjury",
+    label: "Missed Practice Injury",
+    type: "boolean",
+    dataKey: "missedPracticeInjury",
+    row: 3,
+  },
+];
+
+// Activity Report tab filters (same as Injury tab)
+export const phsActivityReportTabFilters: FilterConfig[] = [
+  // Row 1
+  {
+    id: "selectGame",
+    label: "Select Game",
+    type: "select",
+    dataKey: "selectGame",
+    optionsFromData: "game",
+    placeholder: "All",
+    row: 1,
+    width: "200px",
+  },
+  {
+    id: "mechanismOfInjury",
+    label: "Mechanism of Injury",
+    type: "select",
+    dataKey: "mechanismOfInjury",
+    options: MECHANISM_OF_INJURY_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "season",
+    label: "Season",
+    type: "select",
+    dataKey: "season",
+    options: SEASON_OPTIONS,
+    defaultValue: "2025",
+    row: 1,
+  },
+  {
+    id: "contactTypeCategory",
+    label: "Contact Type Category",
+    type: "select",
+    dataKey: "contactTypeCategory",
+    options: CONTACT_TYPE_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "seasonType",
+    label: "Season Type",
+    type: "select",
+    dataKey: "seasonType",
+    options: SEASON_TYPE_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "week",
+    label: "Week",
+    type: "select",
+    dataKey: "week",
+    options: WEEK_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  // Row 2
+  {
+    id: "club",
+    label: "Club",
+    type: "select",
+    dataKey: "teamAbbr",
+    optionsFromData: "teamAbbr",
+    placeholder: "All",
+    row: 2,
+    width: "180px",
+  },
+  {
+    id: "player",
+    label: "Player",
+    type: "select",
+    dataKey: "playerName",
+    optionsFromData: "playerName",
+    placeholder: "All",
+    row: 2,
+    width: "200px",
+  },
+  {
+    id: "injuryType",
+    label: "Injury Type",
+    type: "select",
+    dataKey: "injuryType",
+    optionsFromData: "injuryType",
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "bodyPart",
+    label: "Body Part",
+    type: "select",
+    dataKey: "bodyPart",
+    options: BODY_PART_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "positionAtTimeOfInjury",
+    label: "Position at Time of Injury",
+    type: "select",
+    dataKey: "positionAtTimeOfInjury",
+    options: POSITION_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  // Row 3
+  {
+    id: "rosterPosition",
+    label: "Roster Position",
+    type: "select",
+    dataKey: "rosterPosition",
+    options: POSITION_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "currentRosterStatus",
+    label: "Current Roster Status",
+    type: "select",
+    dataKey: "currentRosterStatus",
+    options: ROSTER_STATUS_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "teamActivity",
+    label: "Team Activity",
+    type: "select",
+    dataKey: "teamActivity",
+    options: TEAM_ACTIVITY_OPTIONS,
+    placeholder: "All",
+    row: 3,
+  },
+  {
+    id: "missedTimeInjury",
+    label: "Missed Time Injury",
+    type: "boolean",
+    dataKey: "missedTimeInjury",
+    defaultValue: true,
+    row: 3,
+  },
+  {
+    id: "missedGameInjury",
+    label: "Missed Game Injury",
+    type: "boolean",
+    dataKey: "missedGameInjury",
+    row: 3,
+  },
+  {
+    id: "missedPracticeInjury",
+    label: "Missed Practice Injury",
+    type: "boolean",
+    dataKey: "missedPracticeInjury",
+    row: 3,
+  },
+];
+
+// Player Summary tab filters - comprehensive filtering for individual player analysis
+export const phsPlayerSummaryTabFilters: FilterConfig[] = [
+  // Row 1 - Player selection is primary
+  {
+    id: "player",
+    label: "Player",
+    type: "select",
+    dataKey: "playerName",
+    optionsFromData: "playerName",
+    placeholder: "Select a player...",
+    row: 1,
+    width: "250px",
+  },
+  {
+    id: "season",
+    label: "Season",
+    type: "select",
+    dataKey: "season",
+    options: SEASON_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "club",
+    label: "Club",
+    type: "select",
+    dataKey: "teamAbbr",
+    optionsFromData: "teamAbbr",
+    placeholder: "All",
+    row: 1,
+    width: "180px",
+  },
+  {
+    id: "injuryType",
+    label: "Injury Type",
+    type: "select",
+    dataKey: "injuryType",
+    optionsFromData: "injuryType",
+    placeholder: "All",
+    row: 1,
+  },
+  {
+    id: "bodyPart",
+    label: "Body Part",
+    type: "select",
+    dataKey: "bodyPart",
+    options: BODY_PART_OPTIONS,
+    placeholder: "All",
+    row: 1,
+  },
+  // Row 2
+  {
+    id: "teamActivity",
+    label: "Team Activity",
+    type: "select",
+    dataKey: "teamActivity",
+    options: TEAM_ACTIVITY_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "rosterPosition",
+    label: "Roster Position",
+    type: "select",
+    dataKey: "rosterPosition",
+    options: POSITION_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "mechanismOfInjury",
+    label: "Mechanism of Injury",
+    type: "select",
+    dataKey: "mechanismOfInjury",
+    options: MECHANISM_OF_INJURY_OPTIONS,
+    placeholder: "All",
+    row: 2,
+  },
+  {
+    id: "missedTimeInjury",
+    label: "Missed Time Injury",
+    type: "boolean",
+    dataKey: "missedTimeInjury",
+    row: 2,
+  },
+  {
+    id: "missedGameInjury",
+    label: "Missed Game Injury",
+    type: "boolean",
+    dataKey: "missedGameInjury",
+    row: 2,
+  },
+];
+
+export function getPhsFiltersForTab(tabIndex: number): FilterConfig[] {
+  switch (tabIndex) {
+    case 0:
+      return phsInjuryTabFilters;
+    case 1:
+      return phsActivityReportTabFilters;
+    case 2:
+      return phsPlayerSummaryTabFilters;
+    default:
+      return phsInjuryTabFilters;
+  }
+}
+
+// ==========================================
 // DASHBOARD CONFIG MAP
 // ==========================================
 
@@ -667,6 +1108,10 @@ export const dashboardFilterConfigs: Record<string, DashboardFilterConfig> = {
   "rehab": {
     dashboardId: "rehab",
     filters: rehabFilters,
+  },
+  "phs-injury-report": {
+    dashboardId: "phs-injury-report",
+    filters: phsInjuryTabFilters,
   },
   "concussion": {
     dashboardId: "concussion",

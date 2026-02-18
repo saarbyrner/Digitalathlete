@@ -6,8 +6,26 @@ import { AppBarHeader } from "@/app/components/AppBarHeader";
 import { Header } from "@/app/components/Header";
 import { DashboardFilters, FilterState } from "@/app/components/DashboardFilters";
 import { LookerFilterBar, useLookerFilters } from "@/app/components/looker/filters";
-import { getFilterConfig, getRehabFiltersForTab } from "@/app/config/dashboardFilters";
-import { INJURY_RECORDS } from "@/app/data/mockInjuryData";
+import { getFilterConfig, getRehabFiltersForTab, getPhsFiltersForTab } from "@/app/config/dashboardFilters";
+import { 
+  INJURY_RECORDS, 
+  ACTIVITY_LOG_ENTRIES, 
+  ActivityLogEntry, 
+  aggregateInjuriesByBodyPartYoY, 
+  aggregateDaysMissedByBodyPartYoY, 
+  aggregateInjuryClassificationMatrix, 
+  getInjuryCountsByType,
+  PLAYER_DEMOGRAPHICS,
+  getPlayerDemographics,
+  aggregateInjuriesByPlayerBySeason,
+  aggregateMissedDaysByPlayerOverTime,
+  aggregateMissedGamesByPlayerOverTime,
+  aggregateMissedPracticesByPlayerOverTime,
+  getPlayerMajorStats,
+  getPlayerInjuryRecords,
+  getPlayerActivityLog,
+} from "@/app/data/mockInjuryData";
+import { getImageForPlayer } from "@/app/utils/playerImages";
 import { MetricCard } from "@/app/components/looker/MetricCard";
 import { getChartColors, getChartColorValues } from "@/app/components/looker/chartConfig";
 import { GaugeCard } from "@/app/components/looker/GaugeCard";
@@ -17,6 +35,7 @@ import { HorizontalBarChartCard } from "@/app/components/looker/HorizontalBarCha
 import { GroupedHorizontalBarChartCard } from "@/app/components/looker/GroupedHorizontalBarChartCard";
 import { MissedTimeStatsCard } from "@/app/components/looker/MissedTimeStatsCard";
 import { DonutChartCard } from "@/app/components/looker/DonutChartCard";
+import { LineChartCard } from "@/app/components/looker/LineChartCard";
 import { SeasonTrendChart } from "@/app/components/looker/SeasonTrendChart";
 import { ComposedBarLineChartCard } from "@/app/components/looker/ComposedBarLineChartCard";
 import { StackedBarChartCard } from "@/app/components/looker/StackedBarChartCard";
@@ -63,6 +82,7 @@ const dashboardTitles: Record<string, string> = {
   "recovery-time": "Recovery Time",
   "team-view": "Team View",
   "rehab": "Rehab",
+  "phs-injury-report": "PHS Injury Report",
 };
 
 // Map dashboard types to injury types for specific dashboards
@@ -91,10 +111,13 @@ export function DashboardPage() {
     teamId: "18", // Default to New York Giants - Changed to string
   }); // Default to 2025 season
 
-  // Looker-style filters - get config for current dashboard (tab-aware for rehab)
+  // Looker-style filters - get config for current dashboard (tab-aware for rehab and PHS)
   const lookerFilterConfig = useMemo(() => {
     if (dashboardType === "rehab") {
       return getRehabFiltersForTab(selectedTab);
+    }
+    if (dashboardType === "phs-injury-report") {
+      return getPhsFiltersForTab(selectedTab);
     }
     return getFilterConfig(dashboardType || "missed-time");
   }, [dashboardType, selectedTab]);
@@ -103,10 +126,12 @@ export function DashboardPage() {
 
   // Clear incompatible filter values when tab changes
   useEffect(() => {
-    if (dashboardType !== "rehab") return;
+    if (dashboardType !== "rehab" && dashboardType !== "phs-injury-report") return;
     
     // Get current tab's filter dataKeys
-    const currentFilters = getRehabFiltersForTab(selectedTab);
+    const currentFilters = dashboardType === "rehab" 
+      ? getRehabFiltersForTab(selectedTab)
+      : getPhsFiltersForTab(selectedTab);
     const currentFilterKeys = new Set(currentFilters.map(f => f.dataKey));
     
     // Check if any current filter values are incompatible with new tab
@@ -186,6 +211,18 @@ export function DashboardPage() {
       bodyPartKeys,
     };
   }, [dashboardType, filteredInjuryRecords, filteredRehabSessions]);
+
+  const leagueTeamRows = rehabChartData?.sessionsByTeam
+    ? rehabChartData.sessionsByTeam.slice(0, 15)
+    : [];
+
+  const leagueTeamMaxValue = leagueTeamRows.length
+    ? Math.max(
+        ...leagueTeamRows.map((row) =>
+          Math.max(row["Rehab sessions"], row["Maintenance sessions"])
+        )
+      )
+    : 0;
 
   // Selected player profile for Player tab
   const selectedPlayerProfile = useMemo(() => {
@@ -298,6 +335,323 @@ export function DashboardPage() {
       maintenanceCount: playerSessions.filter((s) => s.sessionType === "maintenance").length,
     };
   }, [dashboardType, selectedTab, lookerFilterValues.playerName, lookerFilterValues.season, lookerFilterValues.dateRange, selectedPlayerProfile, filteredRehabSessions]);
+
+  // Filtered data for PHS Injury Report dashboard
+  const filteredPhsData = useMemo(() => {
+    if (dashboardType !== "phs-injury-report") return INJURY_RECORDS;
+    
+    let filtered = [...INJURY_RECORDS];
+    
+    // Apply each filter
+    Object.entries(lookerFilterValues).forEach(([key, value]) => {
+      if (!value || value === "" || value === null || value === undefined) return;
+      
+      switch (key) {
+        case "selectGame":
+        case "game":
+          filtered = filtered.filter(r => r.game?.toLowerCase().includes((value as string).toLowerCase()));
+          break;
+        case "mechanismOfInjury":
+          filtered = filtered.filter(r => r.mechanismOfInjury?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "season":
+          filtered = filtered.filter(r => r.season === parseInt(value as string));
+          break;
+        case "contactTypeCategory":
+          filtered = filtered.filter(r => r.contactTypeCategory?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "seasonType":
+          filtered = filtered.filter(r => r.seasonType?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "week":
+          filtered = filtered.filter(r => r.week === parseInt(value as string));
+          break;
+        case "teamAbbr":
+          filtered = filtered.filter(r => r.teamAbbr === value);
+          break;
+        case "playerName":
+          filtered = filtered.filter(r => r.playerName === value);
+          break;
+        case "injuryType":
+          filtered = filtered.filter(r => r.injuryType === value);
+          break;
+        case "bodyPart":
+          filtered = filtered.filter(r => r.bodyPart?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "positionAtTimeOfInjury":
+          filtered = filtered.filter(r => r.positionAtTimeOfInjury === value);
+          break;
+        case "rosterPosition":
+          filtered = filtered.filter(r => r.rosterPosition === value);
+          break;
+        case "currentRosterStatus":
+          filtered = filtered.filter(r => r.currentRosterStatus?.toLowerCase().replace(/\s+/g, '-') === (value as string).toLowerCase());
+          break;
+        case "teamActivity":
+          filtered = filtered.filter(r => r.teamActivity?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "missedTimeInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedTimeInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedTimeInjury === false);
+          break;
+        case "missedGameInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedGameInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedGameInjury === false);
+          break;
+        case "missedPracticeInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedPracticeInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedPracticeInjury === false);
+          break;
+      }
+    });
+    
+    return filtered;
+  }, [dashboardType, lookerFilterValues]);
+
+  // Filtered data for Activity Log (PHS Activity Report tab)
+  const filteredActivityLogData = useMemo(() => {
+    if (dashboardType !== "phs-injury-report" || selectedTab !== 1) return [];
+    
+    let filtered = [...ACTIVITY_LOG_ENTRIES];
+    
+    // Apply each filter (same logic as injury data)
+    Object.entries(lookerFilterValues).forEach(([key, value]) => {
+      if (!value || value === "" || value === null || value === undefined) return;
+      
+      switch (key) {
+        case "selectGame":
+        case "game":
+          filtered = filtered.filter(r => r.game?.toLowerCase().includes((value as string).toLowerCase()));
+          break;
+        case "mechanismOfInjury":
+          filtered = filtered.filter(r => r.mechanismOfInjury?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "season":
+          filtered = filtered.filter(r => r.season === parseInt(value as string));
+          break;
+        case "contactTypeCategory":
+          filtered = filtered.filter(r => r.contactTypeCategory?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "seasonType":
+          filtered = filtered.filter(r => r.seasonType?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "week":
+          filtered = filtered.filter(r => r.week === parseInt(value as string));
+          break;
+        case "teamAbbr":
+          filtered = filtered.filter(r => r.teamAbbr === value);
+          break;
+        case "playerName":
+          filtered = filtered.filter(r => r.playerName === value);
+          break;
+        case "injuryType":
+          filtered = filtered.filter(r => r.injuryType === value);
+          break;
+        case "bodyPart":
+          filtered = filtered.filter(r => r.bodyPart?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "positionAtTimeOfInjury":
+          filtered = filtered.filter(r => r.positionAtTimeOfInjury === value);
+          break;
+        case "rosterPosition":
+          filtered = filtered.filter(r => r.rosterPosition === value);
+          break;
+        case "currentRosterStatus":
+          filtered = filtered.filter(r => r.currentRosterStatus?.toLowerCase().replace(/\s+/g, '-') === (value as string).toLowerCase());
+          break;
+        case "teamActivity":
+          filtered = filtered.filter(r => r.teamActivity?.toLowerCase() === (value as string).toLowerCase());
+          break;
+        case "missedTimeInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedTimeInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedTimeInjury === false);
+          break;
+        case "missedGameInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedGameInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedGameInjury === false);
+          break;
+        case "missedPracticeInjury":
+          if (value === true) filtered = filtered.filter(r => r.missedPracticeInjury === true);
+          else if (value === false) filtered = filtered.filter(r => r.missedPracticeInjury === false);
+          break;
+      }
+    });
+    
+    return filtered;
+  }, [dashboardType, selectedTab, lookerFilterValues]);
+
+  // Chart data for PHS Injury Report dashboard
+  const phsChartData = useMemo(() => {
+    if (dashboardType !== "phs-injury-report") return null;
+    
+    // Get current selected season
+    const currentSeason = parseInt((lookerFilterValues.season as string) || "2025");
+    const previousSeason = currentSeason - 1;
+    
+    // Filter data by season for YoY comparison
+    const currentSeasonData = filteredPhsData.filter(r => r.season === currentSeason);
+    const previousSeasonData = INJURY_RECORDS.filter(r => r.season === previousSeason);
+    
+    // Get major stats - count injuries by type
+    const injuryCounts = new Map<string, number>();
+    filteredPhsData.forEach(record => {
+      const type = record.injuryType;
+      injuryCounts.set(type, (injuryCounts.get(type) || 0) + 1);
+    });
+    
+    return {
+      // Major stats
+      totalInjuries: filteredPhsData.length,
+      lexStrainsCount: injuryCounts.get("LEX Strain") || 0,
+      aclCount: injuryCounts.get("ACL") || 0,
+      highAnkleSprainCount: injuryCounts.get("High Ankle Sprain") || 0,
+      lateralAnkleSprainCount: injuryCounts.get("Lateral Ankle Sprain") || 0,
+      concussionsCount: injuryCounts.get("Concussion") || 0,
+      shoulderClavicleCount: injuryCounts.get("Shoulder") || 0,
+      
+      // YoY comparison data
+      injuriesYoY: aggregateInjuriesByBodyPartYoY(currentSeasonData, previousSeasonData),
+      daysMissedYoY: aggregateDaysMissedByBodyPartYoY(currentSeasonData, previousSeasonData),
+      
+      // Player detail table data
+      playerDetails: filteredPhsData.map(record => ({
+        playerName: record.playerName,
+        position: record.position,
+        injuryDate: record.injuryDate,
+        injuryCategory: record.injuryType,
+        side: record.side || "N/A",
+        clinicalImpression: record.clinicalImpression || "N/A",
+        teamActivity: record.teamActivity,
+        daysMissed: record.daysOut,
+        missedGames: record.missedGames || 0,
+        id: record.id,
+      })),
+      
+      // Injury classification matrix
+      classificationMatrix: aggregateInjuryClassificationMatrix(filteredPhsData),
+    };
+  }, [dashboardType, filteredPhsData, lookerFilterValues.season]);
+
+  // Chart data for Activity Report tab
+  const activityReportChartData = useMemo(() => {
+    if (dashboardType !== "phs-injury-report" || selectedTab !== 1) return null;
+    
+    const currentSeason = parseInt((lookerFilterValues.season as string) || "2025");
+    const previousSeason = currentSeason - 1;
+    
+    // Calculate major stats
+    const missedGames = filteredActivityLogData.filter(entry => entry.event === "Game").length;
+    const missedPractices = filteredActivityLogData.filter(entry => entry.event === "Practice").length;
+    
+    // Aggregate player injuries (group by player)
+    const playerMap = new Map<string, {
+      playerName: string;
+      position: string;
+      bodyPart: string;
+      injuryCategory: string;
+      clinicalImpression: string;
+      season: number;
+      missedGames: number;
+      missedPractices: number;
+    }>();
+    
+    filteredActivityLogData.forEach(entry => {
+      const key = `${entry.playerId}-${entry.injuryType}`;
+      if (!playerMap.has(key)) {
+        playerMap.set(key, {
+          playerName: entry.playerName,
+          position: entry.position,
+          bodyPart: entry.bodyPart,
+          injuryCategory: entry.injuryCategory,
+          clinicalImpression: entry.clinicalImpression,
+          season: entry.season,
+          missedGames: 0,
+          missedPractices: 0,
+        });
+      }
+      const playerData = playerMap.get(key)!;
+      if (entry.event === "Game") {
+        playerData.missedGames++;
+      } else if (entry.event === "Practice") {
+        playerData.missedPractices++;
+      }
+    });
+    
+    const playerInjuries = Array.from(playerMap.values());
+    
+    // Aggregate trend data by season
+    const currentSeasonGames = ACTIVITY_LOG_ENTRIES.filter(e => e.season === currentSeason && e.event === "Game").length;
+    const previousSeasonGames = ACTIVITY_LOG_ENTRIES.filter(e => e.season === previousSeason && e.event === "Game").length;
+    const currentSeasonPractices = ACTIVITY_LOG_ENTRIES.filter(e => e.season === currentSeason && e.event === "Practice").length;
+    const previousSeasonPractices = ACTIVITY_LOG_ENTRIES.filter(e => e.season === previousSeason && e.event === "Practice").length;
+    
+    // Get unique seasons for trends
+    const seasons = Array.from(new Set(ACTIVITY_LOG_ENTRIES.map(e => e.season))).sort();
+    const missedGamesTrend = seasons.map(season => ({
+      season: season.toString(),
+      value: ACTIVITY_LOG_ENTRIES.filter(e => e.season === season && e.event === "Game").length,
+    }));
+    const missedPracticesTrend = seasons.map(season => ({
+      season: season.toString(),
+      value: ACTIVITY_LOG_ENTRIES.filter(e => e.season === season && e.event === "Practice").length,
+    }));
+    
+    return {
+      missedGames,
+      missedPractices,
+      playerInjuries,
+      missedGamesTrend,
+      missedPracticesTrend,
+      currentSeasonGames,
+      previousSeasonGames,
+      currentSeasonPractices,
+      previousSeasonPractices,
+    };
+  }, [dashboardType, selectedTab, filteredActivityLogData, lookerFilterValues.season]);
+
+  // Chart data for Player Summary tab
+  const playerSummaryChartData = useMemo(() => {
+    if (dashboardType !== "phs-injury-report" || selectedTab !== 2) return null;
+    
+    const selectedPlayer = lookerFilterValues.playerName as string;
+    
+    // If no player is selected, return null
+    if (!selectedPlayer) {
+      return null;
+    }
+    
+    // Get player demographics
+    const demographics = getPlayerDemographics(selectedPlayer);
+    
+    // Get major stats using the filtered data
+    const majorStats = getPlayerMajorStats(selectedPlayer, filteredPhsData);
+    
+    // Get injuries by season data
+    const injuriesBySeason = aggregateInjuriesByPlayerBySeason(selectedPlayer, filteredPhsData);
+    
+    // Get missed days/games/practices over time
+    const missedDaysData = aggregateMissedDaysByPlayerOverTime(selectedPlayer, filteredPhsData);
+    const missedGamesData = aggregateMissedGamesByPlayerOverTime(selectedPlayer, filteredPhsData);
+    const missedPracticesData = aggregateMissedPracticesByPlayerOverTime(selectedPlayer, filteredPhsData);
+    
+    // Get injury records for table
+    const injuryRecords = getPlayerInjuryRecords(selectedPlayer, filteredPhsData);
+    
+    // Get activity log for table
+    const activityLog = getPlayerActivityLog(selectedPlayer, filteredActivityLogData);
+    
+    return {
+      selectedPlayer,
+      demographics,
+      majorStats,
+      injuriesBySeason,
+      missedDaysData,
+      missedGamesData,
+      missedPracticesData,
+      injuryRecords,
+      activityLog,
+    };
+  }, [dashboardType, selectedTab, filteredPhsData, filteredActivityLogData, lookerFilterValues.playerName]);
 
   const dashboardTitle = dashboardType 
     ? dashboardTitles[dashboardType] || "Dashboard"
@@ -550,6 +904,8 @@ export function DashboardPage() {
                 >
                   {(dashboardType === "rehab"
                     ? ["Club", "Sessions", "Player", "Injury", "League"]
+                    : dashboardType === "phs-injury-report"
+                    ? ["Injury", "Activity Report", "Player Summary"]
                     : ["Season", "Position", "Team"]
                   ).map((label, index) => (
                     <Tab key={label} label={label} />
@@ -1078,19 +1434,58 @@ export function DashboardPage() {
                             <TableRow>
                               <TableCell>Team</TableCell>
                               <TableCell align="right">Total Sessions</TableCell>
-                              <TableCell align="right">Rehab Sessions</TableCell>
-                              <TableCell align="right">Maintenance Sessions</TableCell>
+                                <TableCell>Rehab Sessions</TableCell>
+                                <TableCell>Maintenance Sessions</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {rehabChartData.sessionsByTeam.slice(0, 15).map((row) => (
-                              <TableRow key={row.team}>
-                                <TableCell>{row.team}</TableCell>
-                                <TableCell align="right">{row.total}</TableCell>
-                                <TableCell align="right">{row["Rehab sessions"]}</TableCell>
-                                <TableCell align="right">{row["Maintenance sessions"]}</TableCell>
-                              </TableRow>
-                            ))}
+                            {leagueTeamRows.map((row) => {
+                              const rehabWidth = leagueTeamMaxValue > 0 ? (row["Rehab sessions"] / leagueTeamMaxValue) * 100 : 0;
+                              const maintenanceWidth = leagueTeamMaxValue > 0 ? (row["Maintenance sessions"] / leagueTeamMaxValue) * 100 : 0;
+
+                              return (
+                                <TableRow key={row.team}>
+                                  <TableCell>{row.team}</TableCell>
+                                  <TableCell align="right">{row.total}</TableCell>
+                                  <TableCell>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                      <Box
+                                        sx={{
+                                          width: `${rehabWidth}%`,
+                                          minWidth: "40px",
+                                          height: "24px",
+                                          backgroundColor: row["Rehab sessions"] === leagueTeamMaxValue ? "var(--chart-blue-dark)" : "var(--chart-1)",
+                                          borderRadius: "2px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "flex-end",
+                                          paddingRight: "8px",
+                                        }}
+                                      />
+                                      <Typography variant="body2">{row["Rehab sessions"]}</Typography>
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                      <Box
+                                        sx={{
+                                          width: `${maintenanceWidth}%`,
+                                          minWidth: "40px",
+                                          height: "24px",
+                                          backgroundColor: row["Maintenance sessions"] === leagueTeamMaxValue ? "#E31B54" : "#FF5B8C",
+                                          borderRadius: "2px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "flex-end",
+                                          paddingRight: "8px",
+                                        }}
+                                      />
+                                      <Typography variant="body2">{row["Maintenance sessions"]}</Typography>
+                                    </Box>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </TableContainer>
@@ -1289,6 +1684,761 @@ export function DashboardPage() {
                       }
                     </Grid>
                   </Grid>
+                )
+              ) : dashboardType === "phs-injury-report" && phsChartData ? (
+                // PHS Injury Report Dashboard
+                selectedTab === 0 ? (
+                  // Injury Tab
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
+                    {/* Major Stats Section */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.totalInjuries.toString()}
+                          label="Total Injuries"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.lexStrainsCount > 0 ? phsChartData.lexStrainsCount.toString() : "(Blank)"}
+                          label="LEX Strains"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.aclCount > 0 ? phsChartData.aclCount.toString() : "(Blank)"}
+                          label="ACL"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.highAnkleSprainCount > 0 ? phsChartData.highAnkleSprainCount.toString() : "(Blank)"}
+                          label="High Ankle Sprain"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.lateralAnkleSprainCount > 0 ? phsChartData.lateralAnkleSprainCount.toString() : "(Blank)"}
+                          label="Lateral Ankle Sprain"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.concussionsCount.toString()}
+                          label="Concussions"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12/7 }}>
+                        <MetricCard
+                          value={phsChartData.shoulderClavicleCount.toString()}
+                          label="Shoulder & Clavicle"
+                        />
+                      </Grid>
+                    </Grid>
+
+                    {/* YoY Comparison Charts */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <GroupedHorizontalBarChartCard
+                          title="Injuries & Illnesses YoY"
+                          data={phsChartData.injuriesYoY}
+                          dataKeys={["currentPeriod", "previousPeriod"]}
+                          yAxisKey="category"
+                          colors={["#E57373", "#90CAF9"]}
+                          height={400}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <GroupedHorizontalBarChartCard
+                          title="Total Days Missed YoY"
+                          data={phsChartData.daysMissedYoY}
+                          dataKeys={["currentPeriod", "previousPeriod"]}
+                          yAxisKey="category"
+                          colors={["#E57373", "#90CAF9"]}
+                          height={400}
+                        />
+                      </Grid>
+                    </Grid>
+
+                    {/* Injury Classification Matrix */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12 }}>
+                        <Paper
+                          sx={{
+                            p: "var(--spacing-4)",
+                            borderRadius: "var(--radius-lg)",
+                            border: "var(--border-width-thin) solid var(--border-default)",
+                            backgroundColor: "var(--white)",
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: "var(--font-family-base)",
+                              fontWeight: "var(--font-weight-semibold)",
+                              color: "var(--text-primary)",
+                              mb: "var(--spacing-4)",
+                            }}
+                          >
+                            Injury Classification
+                          </Typography>
+                          <TableContainer>
+                            <Table>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Team Activity</TableCell>
+                                  {phsChartData.classificationMatrix.length > 0 && 
+                                    Object.keys(phsChartData.classificationMatrix[0])
+                                      .filter(k => k !== "teamActivity" && k !== "Total")
+                                      .map(key => (
+                                        <TableCell align="center" key={key}>{key}</TableCell>
+                                      ))
+                                  }
+                                  <TableCell align="center" sx={{ fontWeight: "bold" }}>Total</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {phsChartData.classificationMatrix.map((row, idx) => (
+                                  <TableRow 
+                                    key={row.teamActivity}
+                                    sx={{
+                                      backgroundColor: row.teamActivity === "Total" 
+                                        ? "var(--background-subtle)" 
+                                        : "transparent",
+                                      fontWeight: row.teamActivity === "Total" ? "bold" : "normal",
+                                    }}
+                                  >
+                                    <TableCell sx={{ fontWeight: row.teamActivity === "Total" ? "bold" : "normal" }}>
+                                      {row.teamActivity}
+                                    </TableCell>
+                                    {Object.keys(row)
+                                      .filter(k => k !== "teamActivity" && k !== "Total")
+                                      .map(key => (
+                                        <TableCell 
+                                          align="center" 
+                                          key={key}
+                                          sx={{
+                                            backgroundColor: row[key] as number > 0 
+                                              ? `rgba(66, 165, 245, ${Math.min((row[key] as number) / 10, 0.5)})` 
+                                              : "transparent",
+                                          }}
+                                        >
+                                          {row[key] as number}
+                                        </TableCell>
+                                      ))
+                                    }
+                                    <TableCell 
+                                      align="center" 
+                                      sx={{ 
+                                        fontWeight: "bold",
+                                        backgroundColor: row.teamActivity === "Total" 
+                                          ? "transparent" 
+                                          : `rgba(66, 165, 245, ${Math.min((row.Total) / 15, 0.5)})`,
+                                      }}
+                                    >
+                                      {row.Total}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+
+                    {/* Player Detail Table */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12 }}>
+                        <Paper
+                          sx={{
+                            p: "var(--spacing-4)",
+                            borderRadius: "var(--radius-lg)",
+                            border: "var(--border-width-thin) solid var(--border-default)",
+                            backgroundColor: "var(--white)",
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: "var(--font-family-base)",
+                              fontWeight: "var(--font-weight-semibold)",
+                              color: "var(--text-primary)",
+                              mb: "var(--spacing-4)",
+                            }}
+                          >
+                            Player Detail
+                          </Typography>
+                          <TableContainer sx={{ maxHeight: 600 }}>
+                            <Table stickyHeader>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Player Name</TableCell>
+                                  <TableCell>Position</TableCell>
+                                  <TableCell>Injury Date</TableCell>
+                                  <TableCell>Injury Category</TableCell>
+                                  <TableCell>Side</TableCell>
+                                  <TableCell>Clinical Impression</TableCell>
+                                  <TableCell>Team Activity</TableCell>
+                                  <TableCell align="right">Days Missed</TableCell>
+                                  <TableCell align="right">Missed Games</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {phsChartData.playerDetails.map((row) => (
+                                  <TableRow key={row.id} hover>
+                                    <TableCell>{row.playerName}</TableCell>
+                                    <TableCell>{row.position}</TableCell>
+                                    <TableCell>
+                                      {new Date(row.injuryDate).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                      })}
+                                    </TableCell>
+                                    <TableCell>{row.injuryCategory}</TableCell>
+                                    <TableCell>{row.side}</TableCell>
+                                    <TableCell>{row.clinicalImpression}</TableCell>
+                                    <TableCell>{row.teamActivity}</TableCell>
+                                    <TableCell align="right">{row.daysMissed}</TableCell>
+                                    <TableCell align="right">{row.missedGames}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ) : selectedTab === 1 ? (
+                  // Activity Report Tab
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
+                    {/* Major Stats Section */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <MetricCard
+                          value={activityReportChartData?.missedGames !== undefined ? activityReportChartData.missedGames.toString() : "(Blank)"}
+                          label="Missed Games"
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <MetricCard
+                          value={activityReportChartData?.missedPractices !== undefined ? activityReportChartData.missedPractices.toString() : "(Blank)"}
+                          label="Missed Practices"
+                        />
+                      </Grid>
+                    </Grid>
+
+                    {/* Player Injuries Table */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12 }}>
+                        <Paper
+                          sx={{
+                            p: "var(--spacing-4)",
+                            borderRadius: "var(--radius-lg)",
+                            border: "var(--border-width-thin) solid var(--border-default)",
+                            backgroundColor: "var(--white)",
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: "var(--font-family-base)",
+                              fontWeight: "var(--font-weight-semibold)",
+                              color: "var(--text-primary)",
+                              mb: "var(--spacing-4)",
+                            }}
+                          >
+                            Player Injuries
+                          </Typography>
+                          <TableContainer sx={{ maxHeight: 500 }}>
+                            <Table stickyHeader>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Player</TableCell>
+                                  <TableCell>Position</TableCell>
+                                  <TableCell>Body Part</TableCell>
+                                  <TableCell>Injury Category</TableCell>
+                                  <TableCell>Primary Clinical Impression</TableCell>
+                                  <TableCell>Season</TableCell>
+                                  <TableCell align="right">Missed Games</TableCell>
+                                  <TableCell align="right">Missed Practices</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {activityReportChartData?.playerInjuries
+                                  .slice(0, 100)
+                                  .map((row, idx) => (
+                                    <TableRow key={`${row.playerName}-${idx}`} hover>
+                                      <TableCell>{row.playerName}</TableCell>
+                                      <TableCell>{row.position}</TableCell>
+                                      <TableCell>{row.bodyPart}</TableCell>
+                                      <TableCell>{row.injuryCategory}</TableCell>
+                                      <TableCell>{row.clinicalImpression}</TableCell>
+                                      <TableCell>{row.season}</TableCell>
+                                      <TableCell align="right">{row.missedGames || 0}</TableCell>
+                                      <TableCell align="right">{row.missedPractices}</TableCell>
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                          {(activityReportChartData?.playerInjuries.length || 0) > 100 && (
+                            <Typography variant="caption" sx={{ mt: 2, display: "block", color: "var(--text-secondary)" }}>
+                              Showing first 100 of {activityReportChartData?.playerInjuries.length} records
+                            </Typography>
+                          )}
+                        </Paper>
+                      </Grid>
+                    </Grid>
+
+                    {/* Trend Charts */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <LineChartCard
+                          title="Missed Games"
+                          data={activityReportChartData?.missedGamesTrend || []}
+                          dataKeys={["value"]}
+                          xAxisKey="season"
+                          height={350}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, lg: 6 }}>
+                        <LineChartCard
+                          title="Missed Practices"
+                          data={activityReportChartData?.missedPracticesTrend || []}
+                          dataKeys={["value"]}
+                          xAxisKey="season"
+                          height={350}
+                        />
+                      </Grid>
+                    </Grid>
+
+                    {/* Missed Activity Log Table */}
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12 }}>
+                        <Paper
+                          sx={{
+                            p: "var(--spacing-4)",
+                            borderRadius: "var(--radius-lg)",
+                            border: "var(--border-width-thin) solid var(--border-default)",
+                            backgroundColor: "var(--white)",
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontFamily: "var(--font-family-base)",
+                              fontWeight: "var(--font-weight-semibold)",
+                              color: "var(--text-primary)",
+                              mb: "var(--spacing-4)",
+                            }}
+                          >
+                            Missed Activity Log
+                          </Typography>
+                          <TableContainer sx={{ maxHeight: 600 }}>
+                            <Table stickyHeader>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Player</TableCell>
+                                  <TableCell>Position</TableCell>
+                                  <TableCell>Reason</TableCell>
+                                  <TableCell>Body Part</TableCell>
+                                  <TableCell>Injury Type</TableCell>
+                                  <TableCell>Injury Category</TableCell>
+                                  <TableCell>Primary Clinical Impression</TableCell>
+                                  <TableCell>Activity Date</TableCell>
+                                  <TableCell>Event</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {filteredActivityLogData.slice(0, 200).map((entry) => (
+                                  <TableRow key={entry.id} hover>
+                                    <TableCell>{entry.playerName}</TableCell>
+                                    <TableCell>{entry.position}</TableCell>
+                                    <TableCell>{entry.reason}</TableCell>
+                                    <TableCell>{entry.bodyPart}</TableCell>
+                                    <TableCell>{entry.injuryType}</TableCell>
+                                    <TableCell>{entry.injuryCategory}</TableCell>
+                                    <TableCell>{entry.clinicalImpression}</TableCell>
+                                    <TableCell>
+                                      {new Date(entry.activityDate).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                      })}
+                                    </TableCell>
+                                    <TableCell>{entry.event}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                          {filteredActivityLogData.length > 200 && (
+                            <Typography variant="caption" sx={{ mt: 2, display: "block", color: "var(--text-secondary)" }}>
+                              Showing first 200 of {filteredActivityLogData.length} records
+                            </Typography>
+                          )}
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ) : (
+                  // Player Summary Tab
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
+                    {!playerSummaryChartData ? (
+                      // No player selected message
+                      <Box sx={{ p: "var(--spacing-8)", textAlign: "center" }}>
+                        <Typography variant="h5" color="text.secondary" gutterBottom>
+                          Select a player to view their injury summary
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Use the Player filter above to choose a player
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <>
+                        {/* Player Demographics Section */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12 }}>
+                            <Paper
+                              sx={{
+                                p: "var(--spacing-4)",
+                                borderRadius: "var(--radius-lg)",
+                                border: "var(--border-width-thin) solid var(--border-default)",
+                                backgroundColor: "var(--white)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "var(--spacing-4)",
+                              }}
+                            >
+                              <Avatar
+                                src={getImageForPlayer(playerSummaryChartData.selectedPlayer)}
+                                alt={playerSummaryChartData.selectedPlayer}
+                                sx={{ width: 64, height: 64, flexShrink: 0 }}
+                              >
+                                {playerSummaryChartData.selectedPlayer.charAt(0)}
+                              </Avatar>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontFamily: "var(--font-family-base)",
+                                    fontWeight: "var(--font-weight-semibold)",
+                                    color: "var(--text-primary)",
+                                    mb: "var(--spacing-1)",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {playerSummaryChartData.selectedPlayer}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontFamily: "var(--font-family-base)",
+                                    color: "var(--text-secondary)",
+                                  }}
+                                >
+                                  {playerSummaryChartData.demographics?.position || "N/A"}
+                                </Typography>
+                              </Box>
+                              <Box sx={{ display: "flex", gap: "var(--spacing-6)", flexShrink: 0 }}>
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
+                                    Date of Birth
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {playerSummaryChartData.demographics?.dateOfBirth 
+                                      ? new Date(playerSummaryChartData.demographics.dateOfBirth).toLocaleDateString('en-GB', { 
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric'
+                                        })
+                                      : "N/A"}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
+                                    Age
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {playerSummaryChartData.demographics?.age || "N/A"}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
+                                    Height
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {playerSummaryChartData.demographics?.height ? playerSummaryChartData.demographics.height.replace('-', "'") + '"' : "N/A"}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Paper>
+                          </Grid>
+                        </Grid>
+
+                        {/* Injuries by Season */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12 }}>
+                            <BarChartCard
+                              title="Injuries by Season"
+                              data={(playerSummaryChartData.injuriesBySeason || []).map(d => ({
+                                name: d.season.toString(),
+                                value: d.count
+                              }))}
+                              dataKey="value"
+                              xAxisKey="name"
+                              height={350}
+                            />
+                          </Grid>
+                        </Grid>
+
+                        {/* Missed Days, Games, Practices Charts */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12, lg: 4 }}>
+                            <LineChartCard
+                              title="Missed Days"
+                              data={(playerSummaryChartData.missedDaysData || []).map(d => ({
+                                name: d.date.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }),
+                                value: d.days
+                              }))}
+                              dataKeys={["value"]}
+                              xAxisKey="name"
+                              height={300}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, lg: 4 }}>
+                            <LineChartCard
+                              title="Missed Games"
+                              data={(playerSummaryChartData.missedGamesData || []).map(d => ({
+                                name: d.date.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }),
+                                value: d.games
+                              }))}
+                              dataKeys={["value"]}
+                              xAxisKey="name"
+                              height={300}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, lg: 4 }}>
+                            <LineChartCard
+                              title="Missed Practices"
+                              data={(playerSummaryChartData.missedPracticesData || []).map(d => ({
+                                name: d.date.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }),
+                                value: d.practices
+                              }))}
+                              dataKeys={["value"]}
+                              xAxisKey="name"
+                              height={300}
+                            />
+                          </Grid>
+                        </Grid>
+
+                        {/* Major Stats */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.totalInjuries.toString()}
+                              label="Total Injuries"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.missedGames.toString()}
+                              label="Missed Games"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.missedPractices.toString()}
+                              label="Missed Practices"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.lexStrains.toString()}
+                              label="LEX Strains"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.acl.toString()}
+                              label="ACL"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.concussions.toString()}
+                              label="Concussions"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.lateralAnkleSprain.toString()}
+                              label="Lateral Ankle Sprain"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.highAnkleSprain.toString()}
+                              label="High Ankle Sprain"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                            <MetricCard
+                              value={playerSummaryChartData.majorStats.shoulderAndClavicle.toString()}
+                              label="Shoulder & Clavicle"
+                            />
+                          </Grid>
+                        </Grid>
+
+                        {/* Player Injuries Information Table */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12 }}>
+                            <Paper
+                              sx={{
+                                p: "var(--spacing-4)",
+                                borderRadius: "var(--radius-lg)",
+                                border: "var(--border-width-thin) solid var(--border-default)",
+                                backgroundColor: "var(--white)",
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: "var(--font-family-base)",
+                                  fontWeight: "var(--font-weight-semibold)",
+                                  color: "var(--text-primary)",
+                                  mb: "var(--spacing-4)",
+                                }}
+                              >
+                                Player Injuries Information
+                              </Typography>
+                              <TableContainer sx={{ maxHeight: 500 }}>
+                                <Table stickyHeader>
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell>Player Name</TableCell>
+                                      <TableCell>Club</TableCell>
+                                      <TableCell>Injury Date</TableCell>
+                                      <TableCell>Injury Category</TableCell>
+                                      <TableCell>Clinical Impression</TableCell>
+                                      <TableCell>Primary Mechanism</TableCell>
+                                      <TableCell>Body Part</TableCell>
+                                      <TableCell>Team Activity</TableCell>
+                                      <TableCell align="right">Missed Days</TableCell>
+                                      <TableCell align="right">Missed Games</TableCell>
+                                      <TableCell align="right">Missed Practices</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {(playerSummaryChartData.injuryRecords || []).map((record) => (
+                                      <TableRow key={record.id} hover>
+                                        <TableCell>{record.playerName}</TableCell>
+                                        <TableCell>{record.teamAbbr}</TableCell>
+                                        <TableCell>
+                                          {new Date(record.injuryDate).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                          })}
+                                        </TableCell>
+                                        <TableCell>{record.injuryType}</TableCell>
+                                        <TableCell>{record.clinicalImpression || "N/A"}</TableCell>
+                                        <TableCell>{record.mechanismOfInjury}</TableCell>
+                                        <TableCell>{record.bodyPart || "N/A"}</TableCell>
+                                        <TableCell>{record.teamActivity}</TableCell>
+                                        <TableCell align="right">{record.daysOut}</TableCell>
+                                        <TableCell align="right">{record.missedGames || 0}</TableCell>
+                                        <TableCell align="right">{Math.floor((record.daysOut / 7) * 5)}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                              {(playerSummaryChartData.injuryRecords || []).length === 0 && (
+                                <Typography variant="body2" sx={{ mt: 2, textAlign: "center", color: "var(--text-secondary)" }}>
+                                  No injury records found for this player with the current filters
+                                </Typography>
+                              )}
+                            </Paper>
+                          </Grid>
+                        </Grid>
+
+                        {/* Missed Activity Log Table */}
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12 }}>
+                            <Paper
+                              sx={{
+                                p: "var(--spacing-4)",
+                                borderRadius: "var(--radius-lg)",
+                                border: "var(--border-width-thin) solid var(--border-default)",
+                                backgroundColor: "var(--white)",
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontFamily: "var(--font-family-base)",
+                                  fontWeight: "var(--font-weight-semibold)",
+                                  color: "var(--text-primary)",
+                                  mb: "var(--spacing-4)",
+                                }}
+                              >
+                                Missed Activity Log
+                              </Typography>
+                              <TableContainer sx={{ maxHeight: 600 }}>
+                                <Table stickyHeader>
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell>Player</TableCell>
+                                      <TableCell>Position</TableCell>
+                                      <TableCell>Reason</TableCell>
+                                      <TableCell>Body Part</TableCell>
+                                      <TableCell>Injury Type</TableCell>
+                                      <TableCell>Injury Category</TableCell>
+                                      <TableCell>Primary Clinical Impression</TableCell>
+                                      <TableCell>Activity Date</TableCell>
+                                      <TableCell>Event</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {(playerSummaryChartData.activityLog || []).map((entry) => (
+                                      <TableRow key={entry.id} hover>
+                                        <TableCell>{entry.playerName}</TableCell>
+                                        <TableCell>{entry.position}</TableCell>
+                                        <TableCell>{entry.reason}</TableCell>
+                                        <TableCell>{entry.bodyPart}</TableCell>
+                                        <TableCell>{entry.injuryType}</TableCell>
+                                        <TableCell>{entry.injuryCategory}</TableCell>
+                                        <TableCell>{entry.clinicalImpression}</TableCell>
+                                        <TableCell>
+                                          {new Date(entry.activityDate).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                          })}
+                                        </TableCell>
+                                        <TableCell>{entry.event}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                              {(playerSummaryChartData.activityLog || []).length === 0 && (
+                                <Typography variant="body2" sx={{ mt: 2, textAlign: "center", color: "var(--text-secondary)" }}>
+                                  No activity log entries found for this player with the current filters
+                                </Typography>
+                              )}
+                            </Paper>
+                          </Grid>
+                        </Grid>
+                      </>
+                    )}
+                  </Box>
                 )
               ) : (
                 <Grid container spacing={2} sx={{ width: "100%", minWidth: 0 }}>

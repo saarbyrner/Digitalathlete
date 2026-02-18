@@ -130,6 +130,14 @@ const dashboardTypes: Dashboard[] = [
     type: "rehab",
     category: "my",
   },
+  {
+    id: 13,
+    folderName: "Analysis",
+    date: "18 Feb 2026",
+    title: "PHS Injury Report",
+    type: "phs-injury-report",
+    category: "favourites",
+  },
 ];
 
   function mapDashboardTypeToPreviewVariant(type: string) {
