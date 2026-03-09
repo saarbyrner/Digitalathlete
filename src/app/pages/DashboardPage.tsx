@@ -2772,28 +2772,39 @@ export function DashboardPage() {
                       </Box>
                     ) : (
                       <>
-                        {/* Player Demographics Section */}
+                        {/* Player Demographics + Injuries by Season */}
                         <Grid container spacing={3}>
-                          <Grid size={{ xs: 12 }}>
+                          <Grid size={{ xs: 12, md: 4 }} sx={{ alignSelf: "flex-start" }}>
                             <Paper
                               sx={{
                                 p: "var(--spacing-4)",
+                                pl: "var(--spacing-5)",
                                 borderRadius: "var(--radius-lg)",
-                                border: "var(--border-width-thin) solid var(--border-default)",
                                 backgroundColor: "var(--white)",
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
-                                gap: "var(--spacing-4)",
+                                gap: "var(--spacing-3)",
+                                position: "relative",
+                                overflow: "hidden",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                               }}
                             >
+                              {/* NFL double left-bar accent */}
+                              <Box sx={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 8, display: "flex", flexDirection: "column" }}>
+                                <Box sx={{ flex: 1, backgroundColor: "#013369" }} />
+                                <Box sx={{ flex: 1, backgroundColor: "#D50A0A" }} />
+                              </Box>
+
+                              {/* Photo + name/position */}
                               <Avatar
                                 src={getImageForPlayer(playerSummaryChartData.selectedPlayer)}
                                 alt={playerSummaryChartData.selectedPlayer}
-                                sx={{ width: 64, height: 64, flexShrink: 0 }}
+                                sx={{ width: 100, height: 100 }}
                               >
                                 {playerSummaryChartData.selectedPlayer.charAt(0)}
                               </Avatar>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ textAlign: "center" }}>
                                 <Typography
                                   variant="h6"
                                   sx={{
@@ -2801,50 +2812,41 @@ export function DashboardPage() {
                                     fontWeight: "var(--font-weight-semibold)",
                                     color: "var(--text-primary)",
                                     mb: "var(--spacing-1)",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
                                   }}
                                 >
                                   {playerSummaryChartData.selectedPlayer}
                                 </Typography>
                                 <Typography
                                   variant="body2"
-                                  sx={{
-                                    fontFamily: "var(--font-family-base)",
-                                    color: "var(--text-secondary)",
-                                  }}
+                                  sx={{ fontFamily: "var(--font-family-base)", color: "var(--text-secondary)" }}
                                 >
                                   {playerSummaryChartData.demographics?.position || "N/A"}
                                 </Typography>
                               </Box>
-                              <Box sx={{ display: "flex", gap: "var(--spacing-6)", flexShrink: 0 }}>
+
+                              {/* Divider */}
+                              <Box sx={{ width: "100%", height: "1px", backgroundColor: "var(--border-default)" }} />
+
+                              {/* Metadata */}
+                              <Box sx={{ display: "flex", flexDirection: "column", gap: "var(--spacing-2)", width: "100%" }}>
                                 <Box>
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
-                                    Date of Birth
-                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Date of Birth</Typography>
                                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                    {playerSummaryChartData.demographics?.dateOfBirth 
-                                      ? new Date(playerSummaryChartData.demographics.dateOfBirth).toLocaleDateString('en-GB', { 
-                                          day: '2-digit',
-                                          month: '2-digit',
-                                          year: 'numeric'
+                                    {playerSummaryChartData.demographics?.dateOfBirth
+                                      ? new Date(playerSummaryChartData.demographics.dateOfBirth).toLocaleDateString('en-GB', {
+                                          day: '2-digit', month: '2-digit', year: 'numeric'
                                         })
                                       : "N/A"}
                                   </Typography>
                                 </Box>
                                 <Box>
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
-                                    Age
-                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Age</Typography>
                                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                     {playerSummaryChartData.demographics?.age || "N/A"}
                                   </Typography>
                                 </Box>
                                 <Box>
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: "var(--spacing-1)" }}>
-                                    Height
-                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Height</Typography>
                                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                     {playerSummaryChartData.demographics?.height ? playerSummaryChartData.demographics.height.replace('-', "'") + '"' : "N/A"}
                                   </Typography>
@@ -2852,11 +2854,7 @@ export function DashboardPage() {
                               </Box>
                             </Paper>
                           </Grid>
-                        </Grid>
-
-                        {/* Injuries by Season */}
-                        <Grid container spacing={3}>
-                          <Grid size={{ xs: 12 }}>
+                          <Grid size={{ xs: 12, md: 8 }}>
                             <BarChartCard
                               title="Injuries by Season"
                               data={(playerSummaryChartData.injuriesBySeason || []).map(d => ({

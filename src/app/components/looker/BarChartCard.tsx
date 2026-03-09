@@ -105,7 +105,7 @@ export function BarChartCard({
             />
             <YAxis {...yAxisConfig} />
             <Tooltip {...tooltipConfig} />
-            <Bar dataKey={dataKey} name={valueLabel || dataKey} fill={barColor} radius={barRadius} />
+            <Bar dataKey={dataKey} name={dataKey} fill={barColor} radius={barRadius} />
           </BarChart>
         </ResponsiveContainer>
       </Box>
