@@ -199,6 +199,58 @@ function getWeightedSeverity(): "Minor" | "Moderate" | "Severe" {
   return "Severe";
 }
 
+// ==========================================
+// PERSISTENT TEAM ROSTERS
+// ==========================================
+
+interface RosterPlayer {
+  playerId: string;
+  playerName: string;
+  position: string;
+  positionGroup: string;
+  injuryProne: boolean; // weighted for more frequent injury selection
+}
+
+function generateTeamRosters(): Map<number, RosterPlayer[]> {
+  const rosters = new Map<number, RosterPlayer[]>();
+  const rosterSize = 53;
+
+  NFL_TEAMS.forEach(team => {
+    const players: RosterPlayer[] = [];
+    for (let i = 0; i < rosterSize; i++) {
+      const position = getRandomItem(POSITIONS);
+      const positionGroup = POSITION_GROUPS[position as keyof typeof POSITION_GROUPS];
+      const playerName = generatePlayerName();
+      players.push({
+        playerId: `${team.abbreviation}-P${String(i + 1).padStart(2, "0")}`,
+        playerName,
+        position,
+        positionGroup,
+        injuryProne: i < Math.floor(rosterSize * 0.2), // top 20% are injury-prone
+      });
+    }
+    rosters.set(team.id, players);
+  });
+
+  return rosters;
+}
+
+const TEAM_ROSTERS = generateTeamRosters();
+
+// Helper to pick a roster player using weighted probability
+function pickRosterPlayer(teamId: number): RosterPlayer {
+  const roster = TEAM_ROSTERS.get(teamId)!;
+  // injury-prone players have 3x chance of selection
+  const weights = roster.map(p => (p.injuryProne ? 3 : 1));
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+  let rand = Math.random() * totalWeight;
+  for (let i = 0; i < roster.length; i++) {
+    rand -= weights[i];
+    if (rand <= 0) return roster[i];
+  }
+  return roster[roster.length - 1];
+}
+
 // Generate injury records
 function generateInjuryRecords(): InjuryRecord[] {
   const records: InjuryRecord[] = [];
@@ -238,10 +290,8 @@ function generateInjuryRecords(): InjuryRecord[] {
       const numInjuries = Math.floor(playersPerTeamPerSeason * injuryRatePerPlayer) + Math.floor(Math.random() * 5);
       
       for (let i = 0; i < numInjuries; i++) {
-        const position = getRandomItem(POSITIONS);
-        const positionGroup = POSITION_GROUPS[position as keyof typeof POSITION_GROUPS];
-        const playerName = generatePlayerName();
-        const playerId = `${team.abbreviation}-${season}-P${i}`;
+        const rosterPlayer = pickRosterPlayer(team.id);
+        const { playerId, playerName, position, positionGroup } = rosterPlayer;
         
         // Determine injury type with weighted distribution
         const injuryTypes: InjuryType[] = ["Concussion", "Shoulder", "LEX Sprain", "LEX Strain", "ACL", "Hamstring", "Ankle", "High Ankle Sprain", "Lateral Ankle Sprain", "Knee", "Back", "Foot", "Hand", "Quad", "Hip", "Groin"];

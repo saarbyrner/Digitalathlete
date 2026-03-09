@@ -715,18 +715,18 @@ export function DashboardPage() {
     // Get player demographics
     const demographics = getPlayerDemographics(selectedPlayer);
     
-    // Get major stats using the filtered data
+    // Get major stats using the filtered data (respects season/team/type filters)
     const majorStats = getPlayerMajorStats(selectedPlayer, filteredPhsData);
-    
-    // Get injuries by season data
-    const injuriesBySeason = aggregateInjuriesByPlayerBySeason(selectedPlayer, filteredPhsData);
-    
-    // Get missed days/games/practices over time
-    const missedDaysData = aggregateMissedDaysByPlayerOverTime(selectedPlayer, filteredPhsData);
-    const missedGamesData = aggregateMissedGamesByPlayerOverTime(selectedPlayer, filteredPhsData);
-    const missedPracticesData = aggregateMissedPracticesByPlayerOverTime(selectedPlayer, filteredPhsData);
-    
-    // Get injury records for table
+
+    // Historical charts use the player's full career records, bypassing the season filter
+    // so charts show the complete injury arc rather than a single filtered window
+    const allPlayerRecords = INJURY_RECORDS.filter(r => r.playerName === selectedPlayer);
+    const injuriesBySeason = aggregateInjuriesByPlayerBySeason(selectedPlayer, allPlayerRecords);
+    const missedDaysData = aggregateMissedDaysByPlayerOverTime(selectedPlayer, allPlayerRecords);
+    const missedGamesData = aggregateMissedGamesByPlayerOverTime(selectedPlayer, allPlayerRecords);
+    const missedPracticesData = aggregateMissedPracticesByPlayerOverTime(selectedPlayer, allPlayerRecords);
+
+    // Injury table respects current filters
     const injuryRecords = getPlayerInjuryRecords(selectedPlayer, filteredPhsData);
     
     // Get activity log for table
@@ -2780,6 +2780,7 @@ export function DashboardPage() {
                                 p: "var(--spacing-4)",
                                 pl: "var(--spacing-5)",
                                 borderRadius: "var(--radius-lg)",
+                                border: "var(--border-width-thin) solid var(--border-default)",
                                 backgroundColor: "var(--white)",
                                 display: "flex",
                                 flexDirection: "column",
@@ -2787,7 +2788,6 @@ export function DashboardPage() {
                                 gap: "var(--spacing-3)",
                                 position: "relative",
                                 overflow: "hidden",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                               }}
                             >
                               {/* NFL double left-bar accent */}
@@ -2849,6 +2849,12 @@ export function DashboardPage() {
                                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Height</Typography>
                                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                     {playerSummaryChartData.demographics?.height ? playerSummaryChartData.demographics.height.replace('-', "'") + '"' : "N/A"}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Weight</Typography>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {playerSummaryChartData.demographics?.weight ? `${playerSummaryChartData.demographics.weight} lbs` : "N/A"}
                                   </Typography>
                                 </Box>
                               </Box>
